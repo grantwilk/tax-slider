@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://grantwilk.com/tax-slider/sitemap.xml

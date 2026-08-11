@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tax Slider — See Your 2026 Federal Tax Brackets and Limits</title>
+<meta name="description" content="Move a slider and watch the 2026 federal tax brackets, phase-outs, cliffs, and contribution limits that apply to you. Every figure is sourced to the IRS, SSA, or CMS.">
+<link rel="canonical" href="https://grantwilk.com/tax-slider/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F0EFEA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15161A" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://grantwilk.com/tax-slider/">
+<meta property="og:site_name" content="Tax Slider">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Tax Slider — See Your 2026 Federal Tax Brackets and Limits">
+<meta property="og:description" content="Move a slider and watch the 2026 federal tax brackets, phase-outs, cliffs, and contribution limits that apply to you. Every figure is sourced to the IRS, SSA, or CMS.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tax Slider — See Your 2026 Federal Tax Brackets and Limits">
+<meta name="twitter:description" content="Move a slider and watch the 2026 federal tax brackets, phase-outs, cliffs, and contribution limits that apply to you.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Tax Slider",
+  "url": "https://grantwilk.com/tax-slider/",
+  "description": "Move a slider and watch the 2026 federal tax brackets, phase-outs, cliffs, and contribution limits that apply to you.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any web browser",
+  "browserRequirements": "Requires JavaScript",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Grant Wilk", "url": "https://grantwilk.com/" }
+}
+</script>
+<script>
+  /* Runs before first paint so the page never flashes the wrong theme. */
+  (function () {
+    try {
+      var t = localStorage.getItem('ts.theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Barlow+Semi+Condensed:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+<style>
+/* ============================ tokens ============================ */
+/* Three theme states. No data-theme attribute means "follow the system", so
+   the dark palette is written twice: once behind prefers-color-scheme for the
+   auto state, and once behind [data-theme="dark"] for the explicit choice.
+   The explicit block must stay last so a manual choice beats the system. */
+:root{
+  --sans:"Barlow Semi Condensed",system-ui,-apple-system,sans-serif;
+  --display:"Archivo",system-ui,-apple-system,sans-serif;
+  --serif:"Source Serif 4",Georgia,serif;
+
+  --paper:#F0EFEA;
+  --panel:#F9F8F4;
+  --inset:#FFFFFF;
+  --grid:#DEDCD3;
+  --grid-strong:#C7C4B8;
+  --line:#1A1B20;
+  --ink:#1A1B20;
+  --muted:#63636E;
+  --faint:#8D8D96;
+
+  --sec-rates:#2E4A7D;
+  --sec-accounts:#2F6B4F;
+  --sec-deductions:#7A5B12;
+  --sec-credits:#1D6B72;
+  --sec-health:#A8442A;
+  --sec-filing:#5C5470;
+
+  /* The marker is ink, not a hue. It can then never collide with a section
+     color, which is what went wrong when it was red on the sister site. */
+  --mark:#1A1B20;
+  --mark-ink:#FFFFFF;
+
+  --bar-ink:#FFFFFF;
+  --bar-edge:rgba(0,0,0,.30);
+  --row-tint:rgba(0,0,0,.045);
+  --row-hot:rgba(0,0,0,.085);
+  --shadow:rgba(26,27,32,.22);
+
+  --label-w:196px;
+  --lane:27px;
+  --ruler-h:40px;
+}
+:root[data-theme="light"]{ color-scheme:light }
+:root[data-theme="dark"]{ color-scheme:dark }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ color-scheme:dark } }
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#15161A; --panel:#1D1F24; --inset:#26282E;
+    --grid:#2F323A; --grid-strong:#434752;
+    --line:#575C69; --ink:#E9E9EE; --muted:#9C9FAB; --faint:#797D89;
+    --sec-rates:#7BA5EC; --sec-accounts:#4FBE8B; --sec-deductions:#D8AC3E;
+    --sec-credits:#5FC8D2; --sec-health:#EE8862; --sec-filing:#AFA2CC;
+    --mark:#FFFFFF; --mark-ink:#15161A;
+    --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
+    --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
+    --shadow:rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15161A; --panel:#1D1F24; --inset:#26282E;
+  --grid:#2F323A; --grid-strong:#434752;
+  --line:#575C69; --ink:#E9E9EE; --muted:#9C9FAB; --faint:#797D89;
+  --sec-rates:#7BA5EC; --sec-accounts:#4FBE8B; --sec-deductions:#D8AC3E;
+  --sec-credits:#5FC8D2; --sec-health:#EE8862; --sec-filing:#AFA2CC;
+  --mark:#FFFFFF; --mark-ink:#15161A;
+  --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
+  --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
+  --shadow:rgba(0,0,0,.55);
+}
+
+/* ============================ base ============================ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:15px; line-height:1.45;
+  -webkit-text-size-adjust:100%;
+  padding:0 16px 64px; max-width:1180px; margin:0 auto;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{margin:0}
+
+/* ============================ masthead ============================ */
+.mast{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; padding:22px 0 12px; border-bottom:2px solid var(--line);
+}
+.mast h1{
+  font-family:var(--display); font-weight:800; letter-spacing:-.02em;
+  font-size:clamp(30px,6vw,50px); line-height:.95; text-transform:uppercase;
+}
+.mast .yr{
+  font-family:var(--display); font-weight:700; font-size:13px;
+  letter-spacing:.14em; color:var(--muted); text-transform:uppercase;
+  white-space:nowrap; padding-bottom:6px;
+}
+.themes{display:flex;gap:0;border:1px solid var(--grid-strong);border-radius:999px;overflow:hidden;background:var(--panel)}
+.themes button{
+  border:0;background:transparent;padding:5px 11px;font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+}
+.themes button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* ============================ controls ============================ */
+.controls{
+  background:var(--panel); border:1px solid var(--grid-strong);
+  border-radius:10px; padding:14px 16px 16px; margin:16px 0;
+}
+.crow{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);
+}
+.field input,.field select{
+  font:inherit;font-size:15px;background:var(--inset);color:var(--ink);
+  border:1px solid var(--grid-strong);border-radius:6px;padding:6px 9px;
+}
+.field input[type=number]{width:118px}
+.field.wide input{width:160px}
+
+/* The slider is the signature control, so it gets its own full-width row. */
+.sliderwrap{margin-top:14px}
+.sliderhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:2px}
+.sliderhead .big{
+  font-family:var(--display);font-weight:800;font-size:clamp(26px,5.5vw,38px);
+  letter-spacing:-.02em;line-height:1;
+}
+.sliderhead .cap{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--grid-strong)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--grid-strong)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--mark);border:3px solid var(--paper);margin-top:-8px;
+  box-shadow:0 1px 4px var(--shadow);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;background:var(--mark);
+  border:3px solid var(--paper);box-shadow:0 1px 4px var(--shadow);
+}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--sec-rates);outline-offset:2px}
+
+.more{margin-top:12px;border-top:1px solid var(--grid);padding-top:10px}
+.more summary{
+  font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;list-style:none;
+}
+.more summary::-webkit-details-marker{display:none}
+.more summary::before{content:"+ ";font-weight:700}
+.more[open] summary::before{content:"\2212 "}
+.more .crow{margin-top:12px}
+.hint{font-size:12.5px;color:var(--faint);margin-top:8px;max-width:64ch}
+
+/* ============================ summary ============================ */
+.summary{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+  gap:1px;background:var(--grid-strong);border:1px solid var(--grid-strong);
+  border-radius:10px;overflow:hidden;margin:16px 0;
+}
+.stat{background:var(--panel);padding:11px 13px}
+.stat .k{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin-top:2px}
+.stat .n{font-size:12px;color:var(--faint);margin-top:1px}
+
+.limits{
+  background:var(--panel);border:1px solid var(--grid-strong);border-radius:10px;
+  padding:12px 14px;margin:16px 0;
+}
+.limits h2{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.limgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px}
+.lim{
+  display:flex;justify-content:space-between;gap:8px;align-items:baseline;
+  border:0;background:transparent;padding:3px 0;text-align:left;width:100%;
+  border-bottom:1px dotted var(--grid);
+}
+.lim:hover .lt,.lim:focus-visible .lt{text-decoration:underline}
+.lim .lt{font-size:13.5px;color:var(--ink)}
+.lim .lv{font-family:var(--display);font-weight:700;font-size:14px;white-space:nowrap}
+.lim .lv small{font-weight:400;color:var(--faint);font-family:var(--sans)}
+
+/* ============================ filters ============================ */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}
+.filters button{
+  border:1px solid var(--grid-strong);background:var(--panel);border-radius:999px;
+  padding:4px 11px;font-size:11.5px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;
+}
+.filters button .dot{width:9px;height:9px;border-radius:2px;background:currentColor}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ============================ chart ============================ */
+.chartwrap{
+  border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
+  overflow:hidden;
+}
+.ruler{
+  position:sticky;top:0;z-index:6;height:var(--ruler-h);
+  background:var(--panel);border-bottom:1px solid var(--grid-strong);
+  display:flex;
+}
+.ruler .pad{width:var(--label-w);flex:0 0 var(--label-w);border-right:1px solid var(--grid-strong)}
+.ruler .ticks{position:relative;flex:1 1 auto}
+.tick{position:absolute;top:0;bottom:0;border-left:1px solid var(--grid)}
+.tick.major{border-left-color:var(--grid-strong)}
+.tick span{
+  position:absolute;bottom:5px;left:4px;font-size:10.5px;font-weight:600;
+  color:var(--muted);white-space:nowrap;
+}
+.track{position:relative}
+.glines{position:absolute;inset:0;pointer-events:none;z-index:0}
+.gline{position:absolute;top:0;bottom:0;border-left:1px solid var(--grid)}
+.gline.major{border-left-color:var(--grid-strong)}
+.row,.sechead{position:relative;z-index:1}
+.row{
+  display:flex;align-items:stretch;height:var(--lane);border:0;padding:0;width:100%;
+  background:transparent;text-align:left;border-bottom:1px solid var(--grid);
+}
+.row:hover{background:var(--row-hot)}
+.row[aria-pressed="true"]{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
+.row .lab{
+  width:var(--label-w);flex:0 0 var(--label-w);padding:0 9px 0 10px;
+  display:flex;align-items:center;gap:6px;border-right:1px solid var(--grid-strong);
+  overflow:hidden;
+}
+.row .lab .dot{width:8px;height:8px;border-radius:2px;background:currentColor;flex:0 0 8px}
+.row .lab .txt{
+  font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;
+}
+.row.off .lab .txt{color:var(--faint)}
+.row .plot{position:relative;flex:1 1 auto}
+.bar{
+  position:absolute;top:5px;bottom:5px;border-radius:3px;min-width:2px;
+  background:currentColor;
+}
+.bar .btxt{
+  position:absolute;inset:0;display:flex;align-items:center;padding:0 6px;
+  font-size:11px;font-weight:700;color:var(--bar-ink);white-space:nowrap;overflow:hidden;
+}
+/* Shape language. A reader should be able to tell what kind of edge it is
+   without opening anything: solid means a fixed band, a fade means the value
+   slides away, a staircase means it drops in jumps, and a thick left rule
+   means one dollar changes the answer. */
+.bar.open{
+  -webkit-mask-image:linear-gradient(to right,#000 78%,transparent 100%);
+          mask-image:linear-gradient(to right,#000 78%,transparent 100%);
+}
+.bar.phaseout{
+  -webkit-mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
+          mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
+}
+.bar.step{
+  -webkit-mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
+          mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
+}
+.bar.cliff{
+  border-left:4px solid currentColor;background:transparent;
+  background-image:repeating-linear-gradient(135deg,currentColor 0 2px,transparent 2px 6px);
+  opacity:.9;
+}
+.mark{
+  position:absolute;top:0;bottom:0;width:2px;background:var(--mark);z-index:5;
+  pointer-events:none;
+}
+.markcap{
+  position:absolute;z-index:7;transform:translateX(-50%);
+  background:var(--mark);color:var(--mark-ink);font-size:10.5px;font-weight:700;
+  padding:1px 6px;border-radius:3px;white-space:nowrap;pointer-events:none;
+}
+.sechead{
+  display:flex;align-items:center;gap:8px;padding:7px 10px 5px;
+  background:var(--row-tint);border-bottom:1px solid var(--grid-strong);
+  font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);
+}
+.sechead .n{color:var(--faint);font-weight:400;letter-spacing:.02em;text-transform:none}
+.empty{padding:22px 14px;color:var(--faint);font-size:13.5px}
+
+/* ============================ detail ============================ */
+.detail{
+  border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
+  padding:16px 18px;margin-top:16px;min-height:132px;
+}
+.detail .kicker{
+  font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);
+}
+.detail h3{
+  font-family:var(--display);font-weight:800;font-size:clamp(19px,3.6vw,26px);
+  letter-spacing:-.015em;margin:3px 0 8px;
+}
+.detail p{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0 0 10px;max-width:66ch}
+.detail .where{
+  display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.03em;
+  border-radius:5px;padding:3px 9px;margin-bottom:10px;
+  background:var(--inset);border:1px solid var(--grid-strong);
+}
+.numbers{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+  gap:8px 18px;margin:0 0 12px;
+}
+.numbers div{border-top:1px solid var(--grid);padding-top:4px}
+.numbers .k{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.numbers .v{font-family:var(--display);font-weight:700;font-size:15px}
+.srcs{font-size:11.5px;color:var(--faint);display:flex;flex-wrap:wrap;gap:4px 12px}
+.srcs a{color:var(--faint)}
+.srcs a:hover{color:var(--ink)}
+
+/* ============================ footer ============================ */
+.foot{margin-top:26px;border-top:1px solid var(--grid-strong);padding-top:14px}
+.foot p{font-size:12.5px;color:var(--muted);margin:0 0 8px;max-width:none}
+.foot .disc{color:var(--faint);font-size:12px;line-height:1.5}
+
+/* ============================ first run ============================ */
+.scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;
+  display:flex;align-items:center;justify-content:center;padding:18px;
+}
+.scrim[hidden]{display:none}
+.modal{
+  background:var(--panel);border:1px solid var(--grid-strong);border-radius:12px;
+  padding:20px 22px 22px;max-width:430px;width:100%;box-shadow:0 18px 50px var(--shadow);
+}
+.modal h2{
+  font-family:var(--display);font-weight:800;font-size:25px;letter-spacing:-.02em;
+  margin-bottom:4px;
+}
+.modal p{font-size:13.5px;color:var(--muted);margin:0 0 15px}
+.modal .field{margin-bottom:12px}
+.modal .field input,.modal .field select{width:100%}
+.modal .go{
+  width:100%;margin-top:6px;background:var(--ink);color:var(--paper);border:0;
+  border-radius:7px;padding:11px;font-family:var(--display);font-weight:700;
+  font-size:15px;letter-spacing:.02em;
+}
+
+/* ============================ small screens ============================ */
+@media (max-width:720px){
+  :root{--label-w:128px;--lane:25px}
+  body{padding:0 11px 52px}
+  .row .lab{padding:0 5px 0 7px;gap:4px}
+  .row .lab .txt{font-size:11px}
+  .bar .btxt{display:none}
+  .field input[type=number],.field.wide input{width:100%}
+  .field{flex:1 1 132px}
+  .crow{gap:10px 12px}
+  .tick span{font-size:9.5px}
+  .detail{padding:13px 14px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .bar,.mark,.markcap{transition:left .09s linear,width .09s linear}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div>
+    <h1>Tax Slider</h1>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+    <div class="themes" role="group" aria-label="Color theme">
+      <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-set="auto" aria-pressed="true">Auto</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+    </div>
+    <div class="yr">Tax year 2026 &middot; Federal</div>
+  </div>
+</header>
+
+<section class="controls">
+  <div class="crow">
+    <div class="field">
+      <label for="status">Filing status</label>
+      <select id="status">
+        <option value="single">Single</option>
+        <option value="mfj">Married, joint</option>
+        <option value="mfs">Married, separate</option>
+        <option value="hoh">Head of household</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="age">Your age</label>
+      <input id="age" type="number" min="0" max="110" step="1" value="35">
+    </div>
+    <div class="field">
+      <label for="children">Children under 17</label>
+      <input id="children" type="number" min="0" max="12" step="1" value="0">
+    </div>
+    <div class="field">
+      <label for="axis">Axis top</label>
+      <select id="axis">
+        <option value="250000">$250,000</option>
+        <option value="500000">$500,000</option>
+        <option value="1000000">$1,000,000</option>
+        <option value="1500000">$1,500,000</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sliderwrap">
+    <div class="sliderhead">
+      <div class="big" id="incomeBig">$0</div>
+      <div class="cap">Total income &middot; drag to move</div>
+    </div>
+    <input id="income" type="range" min="0" max="250000" step="1000" value="120000"
+           aria-label="Total income">
+  </div>
+
+  <details class="more" id="mixDetails">
+    <summary>Income mix</summary>
+    <div class="crow">
+      <div class="field"><label for="mWage">Pay, before deductions</label><input id="mWage" type="number" min="0" step="1000" value="120000"></div>
+      <div class="field"><label for="mBonus">Bonus</label><input id="mBonus" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="mRsu">Vesting stock</label><input id="mRsu" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="mInt">Interest</label><input id="mInt" type="number" min="0" step="500" value="0"></div>
+      <div class="field"><label for="mQdiv">Qualified dividends</label><input id="mQdiv" type="number" min="0" step="500" value="0"></div>
+      <div class="field"><label for="mLtg">Long-term gain</label><input id="mLtg" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="mStg">Short-term gain</label><input id="mStg" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="mExempt">Tax-exempt interest</label><input id="mExempt" type="number" min="0" step="500" value="0"></div>
+    </div>
+    <p class="hint">Enter pay before any deduction comes out, not the wages box on
+      your W-2. The slider scales this mix up and down and holds the proportions
+      steady, so the shape of your income stays the same as the amount changes.</p>
+  </details>
+
+  <details class="more">
+    <summary>What you put away</summary>
+    <div class="crow">
+      <div class="field"><label for="a401k">401(k), before tax</label><input id="a401k" type="number" min="0" step="500" value="0"></div>
+      <div class="field"><label for="aHsa">HSA, from pay</label><input id="aHsa" type="number" min="0" step="100" value="0"></div>
+      <div class="field"><label for="aIso">ISO exercise spread</label><input id="aIso" type="number" min="0" step="1000" value="0"></div>
+    </div>
+    <p class="hint">Money into a traditional 401(k) lowers income tax but not
+      Social Security or Medicare tax. Money into an HSA from your pay lowers
+      both. The spread on an incentive stock option raises the alternative
+      minimum tax measure only.</p>
+  </details>
+
+  <details class="more">
+    <summary>Other situations</summary>
+    <div class="crow">
+      <div class="field"><label for="oTips">Tip income</label><input id="oTips" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="oOt">Overtime pay</label><input id="oOt" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="oCar">Car loan interest</label><input id="oCar" type="number" min="0" step="500" value="0"></div>
+      <div class="field"><label for="oSs">Social Security benefit</label><input id="oSs" type="number" min="0" step="1000" value="0"></div>
+      <div class="field" style="justify-content:flex-end">
+        <label><input type="checkbox" id="oHdhp"> High-deductible health plan</label>
+        <label><input type="checkbox" id="oOwn"> I buy my own health plan</label>
+      </div>
+    </div>
+  </details>
+</section>
+
+<section class="summary" id="summary" aria-live="polite"></section>
+
+<section class="limits">
+  <h2 id="limitsHead">Your figures</h2>
+  <div class="limgrid" id="limits"></div>
+</section>
+
+<nav class="filters" id="filters" aria-label="Sections"></nav>
+
+<div class="chartwrap">
+  <div class="ruler"><div class="pad"></div><div class="ticks" id="ticks"></div></div>
+  <div class="track" id="track"></div>
+</div>
+
+<section class="detail" id="detail" aria-live="polite"></section>
+
+<footer class="foot">
+  <p>Every figure is for tax year 2026 and for federal tax only. State and local
+    tax is not shown. The page shows where the edges are. It does not work out
+    what you owe.</p>
+  <p class="disc">This page is for illustration. It is not tax advice and it is
+    not financial advice. The figures come from public IRS, SSA, and CMS
+    documents for tax year 2026, and they can contain errors. Tax rules change,
+    and your situation can have facts that this page does not model. Speak to a
+    qualified tax professional before you act on anything here.</p>
+</footer>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle">Start here</h2>
+    <p>Three answers and the chart fills in. You can change any of them later.</p>
+    <div class="field">
+      <label for="mStatus">Filing status</label>
+      <select id="mStatus">
+        <option value="single">Single</option>
+        <option value="mfj">Married, joint</option>
+        <option value="mfs">Married, separate</option>
+        <option value="hoh">Head of household</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="mAge">Your age</label>
+      <input id="mAge" type="number" min="0" max="110" step="1" value="35">
+    </div>
+    <div class="field">
+      <label for="mIncome">Total income for 2026</label>
+      <input id="mIncome" type="number" min="0" step="1000" value="120000">
+    </div>
+    <button class="go" type="button" id="mGo">Show my chart</button>
+  </div>
+</div>
+
+<script>
+const RULES = [
+  {id:"bracket_10", sec:"rates", t:"10% bracket", m:"taxable", shape:"band", o:0,
+   e:{single:[0,12400],mfj:[0,24800],mfs:[0,12400],hoh:[0,17700]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_12", sec:"rates", t:"12% bracket", m:"taxable", shape:"band", o:1,
+   e:{single:[12400,50400],mfj:[24800,100800],mfs:[12400,50400],hoh:[17700,67450]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_22", sec:"rates", t:"22% bracket", m:"taxable", shape:"band", o:2,
+   e:{single:[50400,105700],mfj:[100800,211400],mfs:[50400,105700],hoh:[67450,105700]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_24", sec:"rates", t:"24% bracket", m:"taxable", shape:"band", o:3,
+   e:{single:[105700,201775],mfj:[211400,403550],mfs:[105700,201775],hoh:[105700,201750]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_32", sec:"rates", t:"32% bracket", m:"taxable", shape:"band", o:4,
+   e:{single:[201775,256225],mfj:[403550,512450],mfs:[201775,256225],hoh:[201750,256200]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_35", sec:"rates", t:"35% bracket", m:"taxable", shape:"band", o:5,
+   e:{single:[256225,640600],mfj:[512450,768700],mfs:[256225,384350],hoh:[256200,640600]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"bracket_37", sec:"rates", t:"37% bracket", m:"taxable", shape:"open", o:6,
+   e:{single:[640600,null],mfj:[768700,null],mfs:[384350,null],hoh:[640600,null]},
+   d:"This rate applies only to the taxable income inside this band, not to all of your income. Your first dollars are still taxed at 10 percent. The band is measured on taxable income, which is your income after the standard deduction or your itemized deductions.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"ltcg_0", sec:"rates", t:"0% capital gains band", m:"taxable", shape:"band", o:10,
+   e:{single:[0,49450],mfj:[0,98900],mfs:[0,49450],hoh:[0,66200]},
+   st:"0% gains band",
+   d:"Long-term gain and qualified dividends are taxed at zero in this band. The band is measured on your total taxable income, not on the gain alone. Ordinary income fills the band first, and only the room that is left holds gain at zero.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"ltcg_15", sec:"rates", t:"15% capital gains band", m:"taxable", shape:"band", o:11,
+   e:{single:[49450,545500],mfj:[98900,613700],mfs:[49450,306850],hoh:[66200,579600]},
+   st:"15% gains band",
+   d:"Long-term gain and qualified dividends are taxed at 15 percent in this band. To hold a gain at 15 percent you must hold the asset for more than one year. A gain on an asset held one year or less is taxed at your ordinary rate instead.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"ltcg_20", sec:"rates", t:"20% capital gains band", m:"taxable", shape:"open", o:12,
+   e:{single:[545500,null],mfj:[613700,null],mfs:[306850,null],hoh:[579600,null]},
+   st:"20% gains band",
+   d:"Long-term gain above this point is taxed at 20 percent. Add the 3.8 percent Net Investment Income Tax and the real rate is 23.8 percent, because the two use different measures of income and can both apply.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"],["IRS: NIIT","https://www.irs.gov/individuals/net-investment-income-tax"]]},
+  {id:"niit", sec:"rates", t:"Net Investment Income Tax", m:"magi", shape:"open", o:30,
+   e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
+   st:"Investment tax",
+   d:"A tax of 3.8 percent on investment income. It applies to the smaller of your net investment income or the amount of MAGI above the threshold, so it phases in rather than starting all at once. The threshold has never been indexed, so more people cross it every year.",
+   s:[["IRS: NIIT","https://www.irs.gov/individuals/net-investment-income-tax"]]},
+  {id:"addl_medicare", sec:"rates", t:"Additional Medicare Tax", m:"wages", shape:"open", o:21,
+   e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
+   st:"Extra Medicare tax",
+   d:"An extra 0.9 percent on wages above the threshold. Only the excess is taxed. Your employer starts withholding it at $200,000 of pay from that employer, whatever your filing status, so a two-earner couple can be under-withheld and owe it at filing.",
+   s:[["IRS: Additional Medicare Tax","https://www.irs.gov/businesses/small-businesses-self-employed/questions-and-answers-for-the-additional-medicare-tax"]]},
+  {id:"ss_wage_base", sec:"rates", t:"Social Security wage base", m:"wages", shape:"band", o:20,
+   e:{single:[0,184500],mfj:[0,184500],mfs:[0,184500],hoh:[0,184500]},
+   st:"SS wage base",
+   d:"Social Security tax of 6.2 percent applies to wages up to this point and stops above it. The ceiling is per employer, not per person. If you change jobs during the year, both employers withhold up to the full base, and you claim the excess back as a credit.",
+   s:[["SSA wage base","https://www.ssa.gov/oact/cola/cbb.html"]]},
+  {id:"amt_phaseout", sec:"rates", t:"AMT exemption phase-out", m:"amti", shape:"phaseout", o:31,
+   e:{single:[500000,680200],mfj:[1000000,1280400],mfs:[500000,640200],hoh:[500000,680200]},
+   st:"AMT exemption",
+   d:"The Alternative Minimum Tax exemption shrinks by 50 cents for every dollar above the start, so it disappears quickly. The 2025 law moved the start down and doubled the rate from 25 percent. Exercising incentive stock options adds to this measure, so it matters most in the year you exercise.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"],["IRC 55","https://www.law.cornell.edu/uscode/text/26/55"]]},
+  {id:"supplemental_million", sec:"rates", t:"37% supplemental withholding", m:"supplemental", shape:"open", o:22,
+   e:{single:[1000000,null],mfj:[1000000,null],mfs:[1000000,null],hoh:[1000000,null]},
+   st:"37% withholding",
+   needs:"supp",
+   d:"Bonuses and vesting stock are withheld at a flat 22 percent until they pass $1,000,000 for the year, then at 37 percent. Twenty-two percent is below the rate most people at this income pay, which is why a large vest often leaves a bill at filing.",
+   s:[["IRS Pub 15","https://www.irs.gov/publications/p15"]]},
+  {id:"roth_ira", sec:"accounts", t:"Roth IRA phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[153000,168000],mfj:[242000,252000],mfs:[0,10000],hoh:[153000,168000]},
+   st:"Roth IRA",
+   d:"Above the start you can put in less than the full amount. Above the end you cannot contribute directly at all. Married filing separately runs from zero to $10,000, which shuts out almost everyone who files that way.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: Roth IRA limits","https://www.irs.gov/retirement-plans/roth-iras"]]},
+  {id:"trad_ira_deduction", sec:"accounts", t:"IRA deduction phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[81000,91000],mfj:[129000,149000],mfs:[0,10000],hoh:[81000,91000]},
+   st:"IRA deduction",
+   d:"This range applies when a workplace retirement plan covers you. Above the end you can still contribute, but you cannot deduct it. If a plan does not cover you, there is no income limit at all.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: IRA deduction limits","https://www.irs.gov/retirement-plans/ira-deduction-limits"]]},
+  {id:"roth_catch_up", sec:"accounts", t:"Roth catch-up required", m:"priorwages", shape:"cliff", o:50,
+   e:{single:[150000,null],mfj:[150000,null],mfs:[150000,null],hoh:[150000,null]},
+   st:"Roth catch-up",
+   d:"New for 2026. If you earned more than this from the employer that sponsors your plan LAST year, your catch-up contributions must go in as Roth. This one edge does not move with the income above, because it reads last year and one employer. If the plan has no Roth option, the catch-up is zero.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"hce", sec:"accounts", t:"Highly compensated employee", m:"priorwages", shape:"cliff", o:50,
+   e:{single:[160000,null],mfj:[160000,null],mfs:[160000,null],hoh:[160000,null]},
+   st:"Highly compensated",
+   d:"Above this, your plan treats you as highly compensated. Testing rules can then cap what you defer, and some plans refund part of your contribution after year end. The test reads last year’s pay.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"savers_credit", sec:"accounts", t:"Saver’s Credit", m:"agi", shape:"step", o:50,
+   e:{single:[0,40250],mfj:[0,80500],mfs:[0,40250],hoh:[0,60375]},
+   st:"Saver’s Credit",
+   d:"A credit worth 50, 20, or 10 percent of what you put into a retirement account, up to $2,000 of contributions. The rate drops in steps rather than sliding, so one dollar of extra income can cut the credit sharply. It ends completely at the top of this band.",
+   s:[["IRS: Saver’s Credit","https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-savers-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"salt_phasedown", sec:"deductions", t:"SALT cap phase-down", m:"magi", shape:"phaseout", o:50,
+   e:{single:[505000,606333],mfj:[505000,606333],mfs:[252500,303167],hoh:[505000,606333]},
+   st:"SALT cap",
+   d:"The state and local tax cap is $40,400 for 2026, far above the old $10,000. Above the start it falls by 30 cents per dollar of income, but it never drops below $10,000. So it shrinks and then stops shrinking.",
+   s:[["IRC 164","https://www.law.cornell.edu/uscode/text/26/164"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"qbi_phasein", sec:"deductions", t:"QBI limits phase in", m:"taxable", shape:"phaseout", o:50,
+   e:{single:[201750,276750],mfj:[403500,553500],mfs:[201775,276775],hoh:[201750,276750]},
+   st:"QBI limits",
+   d:"Below the start, the 20 percent deduction on business income has no wage test and no restriction on the type of work. Across this range the wage test phases in, and for professional service work the deduction phases out completely.",
+   s:[["IRS: QBI deduction","https://www.irs.gov/newsroom/qualified-business-income-deduction"]]},
+  {id:"senior_deduction", sec:"deductions", t:"Senior deduction phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[75000,175000],mfj:[150000,250000],mfs:[null,null],hoh:[75000,175000]},
+   st:"Senior deduction",
+   ageMin:65,
+   d:"A deduction of $6,000 for each person aged 65 or over, on top of the usual extra standard deduction for age. It falls by 6 cents per dollar above the start. A couple where both qualify get two of them, and both reach zero at the same income. It ends after 2028.",
+   s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"tips_deduction", sec:"deductions", t:"Tips deduction phase-out", m:"magi", shape:"step", o:50,
+   e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
+   st:"Tips deduction",
+   needs:"tips",
+   d:"Up to $25,000 of tip income is deductible. Above the start it falls by $100 for each full $1,000 of income, so it drops in steps rather than sliding. Where it reaches zero depends on how much you earned in tips, not on the cap. It ends after 2028.",
+   s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
+  {id:"overtime_deduction", sec:"deductions", t:"Overtime deduction phase-out", m:"magi", shape:"step", o:50,
+   e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
+   st:"Overtime deduction",
+   needs:"overtime",
+   d:"Up to $12,500 of overtime pay is deductible, or $25,000 on a joint return. It falls by $100 for each full $1,000 of income above the start, in steps. It ends after 2028.",
+   s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
+  {id:"car_loan_deduction", sec:"deductions", t:"Car loan interest phase-out", m:"magi", shape:"step", o:50,
+   e:{single:[100000,null],mfj:[200000,null],mfs:[null,null],hoh:[100000,null]},
+   st:"Car loan interest",
+   needs:"carloan",
+   d:"Up to $10,000 of interest on a loan for a new car assembled in the United States. It falls by $200 for each $1,000 of income above the start, and this one rounds against you rather than for you. It ends after 2028.",
+   s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
+  {id:"student_loan_interest", sec:"deductions", t:"Student loan interest phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[85000,100000],mfj:[175000,205000],mfs:[null,null],hoh:[85000,100000]},
+   st:"Student loan",
+   d:"Up to $2,500 of student loan interest is deductible without itemizing. The deduction slides to zero across this range. Married filing separately cannot claim it at all.",
+   s:[["IRS: student loan interest","https://www.irs.gov/taxtopics/tc456"]]},
+  {id:"itemized_top_limit", sec:"deductions", t:"Itemized deduction haircut", m:"taxable", shape:"open", o:50,
+   e:{single:[640600,null],mfj:[768700,null],mfs:[384350,null],hoh:[640600,null]},
+   st:"Itemized haircut",
+   d:"Once you reach the top bracket, itemized deductions are cut by two thirty-sevenths of the amount above this point. The effect is to cap their value at 35 cents on the dollar rather than 37.",
+   s:[["IRC 68","https://www.law.cornell.edu/uscode/text/26/68"]]},
+  {id:"ctc_phaseout", sec:"credits", t:"Child Tax Credit phase-out", m:"magi", shape:"step", o:50,
+   e:{single:[200000,null],mfj:[400000,null],mfs:[200000,null],hoh:[200000,null]},
+   st:"Child Tax Credit",
+   needs:"children",
+   d:"The credit is $2,200 for each qualifying child. Above the start it falls by $50 for each $1,000 of income. Where it reaches zero depends on how many children you have, so the end of this band moves with your family and not with a fixed number.",
+   s:[["IRS: Child Tax Credit","https://www.irs.gov/credits-deductions/individuals/child-tax-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"education_credits", sec:"credits", t:"Education credits phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[80000,90000],mfj:[160000,180000],mfs:[null,null],hoh:[80000,90000]},
+   st:"Education credits",
+   d:"Both education credits use the same range. The American Opportunity credit is worth up to $2,500 per student and the Lifetime Learning credit up to $2,000 per return. Neither is available to a person who files separately.",
+   s:[["IRS: education credits","https://www.irs.gov/credits-deductions/individuals/education-credits-aotc-llc"]]},
+  {id:"adoption_credit", sec:"credits", t:"Adoption credit phase-out", m:"magi", shape:"phaseout", o:50,
+   e:{single:[265080,305080],mfj:[265080,305080],mfs:[265080,305080],hoh:[265080,305080]},
+   st:"Adoption credit",
+   d:"A credit of up to $17,670 for each child you adopt, of which $5,120 can come back to you as a refund even if you owe no tax. It slides to zero across this range.",
+   s:[["IRS: adoption credit","https://www.irs.gov/taxtopics/tc607"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"cdcc_rate", sec:"credits", t:"Care credit rate falls", m:"agi", shape:"step", o:50,
+   e:{single:[15000,75000],mfj:[15000,150000],mfs:[15000,75000],hoh:[15000,75000]},
+   st:"Care credit rate",
+   d:"The credit for child or adult care starts at 50 percent of what you spend and drops one point for every $2,000 of income above $15,000. It stops falling at 35 percent, then starts falling again at the top of this band and stops for good at 20 percent. It never reaches zero.",
+   s:[["IRS Pub 503","https://www.irs.gov/publications/p503"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"ss_earnings_test", sec:"health", t:"Social Security earnings test", m:"wages", shape:"open", o:50,
+   e:{single:[24480,null],mfj:[24480,null],mfs:[24480,null],hoh:[24480,null]},
+   st:"SS earnings test",
+   ageMin:62,
+   ageMax:66,
+   needs:"ssben",
+   d:"If you draw Social Security before your full retirement age and keep working, SSA holds back $1 of benefit for every $2 you earn above this point. The money is not lost. Your benefit is recalculated upward once you reach full retirement age.",
+   s:[["SSA 2026 COLA","https://www.ssa.gov/news/en/cola/factsheets/2026.html"]]},
+  {id:"aca_cliff", sec:"health", t:"ACA subsidy cliff", m:"magi", shape:"cliff", o:50,
+   e:{single:[62600,null],mfj:[62600,null],mfs:[62600,null],hoh:[62600,null]},
+   st:"ACA cliff",
+   needs:"ownplan",
+   d:"The sharpest edge in the tax code, and it came back for 2026. Below 400 percent of the poverty level you can get help paying a health plan you buy yourself. One dollar above it, you get nothing. The 2025 law also removed the cap on paying back credits you already received.",
+   s:[["IRS: premium tax credit","https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics"],["HHS poverty guidelines","https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines"],["Rev. Proc. 2025-25","https://www.irs.gov/pub/irs-drop/rp-25-25.pdf"]]},
+  {id:"irmaa_1", sec:"health", t:"Medicare surcharge, tier 1", m:"magi", shape:"cliff", o:50,
+   e:{single:[109000,null],mfj:[218000,null],mfs:[109000,null],hoh:[109000,null]},
+   st:"Surcharge tier 1",
+   ageMin:63,
+   d:"Above this point Medicare charges $81.20 more per month for Part B and $14.50 more for Part D, for each person. Every tier is a cliff, not a slope, so one dollar can cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
+   s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
+  {id:"irmaa_2", sec:"health", t:"Medicare surcharge, tier 2", m:"magi", shape:"cliff", o:50,
+   e:{single:[137000,null],mfj:[274000,null],mfs:[137000,null],hoh:[137000,null]},
+   st:"Surcharge tier 2",
+   ageMin:63,
+   d:"Above this point Medicare charges $202.90 more per month for Part B and $37.50 more for Part D, for each person. Every tier is a cliff, not a slope, so one dollar can cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
+   s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
+  {id:"irmaa_3", sec:"health", t:"Medicare surcharge, tier 3", m:"magi", shape:"cliff", o:50,
+   e:{single:[171000,null],mfj:[342000,null],mfs:[171000,null],hoh:[171000,null]},
+   st:"Surcharge tier 3",
+   ageMin:63,
+   d:"Above this point Medicare charges $324.60 more per month for Part B and $60.40 more for Part D, for each person. Every tier is a cliff, not a slope, so one dollar can cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
+   s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
+  {id:"irmaa_4", sec:"health", t:"Medicare surcharge, tier 4", m:"magi", shape:"cliff", o:50,
+   e:{single:[205000,null],mfj:[410000,null],mfs:[205000,null],hoh:[205000,null]},
+   st:"Surcharge tier 4",
+   ageMin:63,
+   d:"Above this point Medicare charges $446.30 more per month for Part B and $83.30 more for Part D, for each person. Every tier is a cliff, not a slope, so one dollar can cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
+   s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
+  {id:"irmaa_5", sec:"health", t:"Medicare surcharge, tier 5", m:"magi", shape:"cliff", o:50,
+   e:{single:[500000,null],mfj:[750000,null],mfs:[500000,null],hoh:[500000,null]},
+   st:"Surcharge tier 5",
+   ageMin:63,
+   d:"Above this point Medicare charges $487.00 more per month for Part B and $91.00 more for Part D, for each person. Every tier is a cliff, not a slope, so one dollar can cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
+   s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
+  {id:"ss_benefit_tax", sec:"health", t:"Social Security benefits taxed", m:"provisional", shape:"phaseout", o:50,
+   e:{single:[25000,34000],mfj:[32000,44000],mfs:[null,null],hoh:[25000,34000]},
+   st:"SS benefits taxed",
+   ageMin:62,
+   needs:"ssben",
+   d:"Part of your Social Security benefit becomes taxable above these points. Up to half is taxed in the lower band and up to 85 percent above it. These figures were set in 1983 and 1993 and have never been indexed. A married person who files separately and lived with their spouse gets no threshold at all, so up to 85 percent is taxable from the first dollar.",
+   s:[["IRC 86","https://www.law.cornell.edu/uscode/text/26/86"]]},
+  {id:"estimated_110", sec:"filing", t:"110% safe harbor", m:"agi", shape:"open", o:50,
+   e:{single:[150000,null],mfj:[150000,null],mfs:[75000,null],hoh:[150000,null]},
+   d:"To avoid an underpayment penalty you normally pay in 100 percent of last year’s tax. Above this income the figure rises to 110 percent. This catches people the year after a large vest or a large gain.",
+   s:[["IRS: estimated taxes","https://www.irs.gov/faqs/estimated-tax"]]},
+];
+
+/* Driven by age, not by income, so these are not bars. */
+const LIMITS = [
+  {id:"stdded", t:"Standard deduction", base:{single:16100,mfj:32200,mfs:16100,hoh:24150}, catch:{},
+   d:"What you subtract before the brackets apply, if you do not itemize. A person aged 65 or over adds more, and a blind person adds the same amount again.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"aged", t:"Extra deduction at 65", base:{single:2050,mfj:1650,mfs:1650,hoh:2050}, catch:{},
+   ageMin:65,
+   d:"On top of the standard deduction, and separate from the $6,000 senior deduction that the 2025 law added. A blind person adds the same amount a second time.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"deferral", t:"401(k) and 403(b) deferral", base:24500, catch:{50:8000,60:11250,64:8000},
+   d:"The most you can put into a workplace plan from your own pay. Employer money does not count against this. The extra at 50 rises again for the four years from 60 to 63, then drops back at 64.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"ira", t:"IRA contribution", base:7500, catch:{50:1100},
+   d:"One limit across every traditional and Roth IRA you own. It is not per account. You need earned income at least equal to what you put in.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"hsa_self", t:"HSA, self-only cover", base:4400, catch:{55:1000},
+   needs:"hdhp",
+   d:"Only available with a qualifying high-deductible plan. Employer money counts against this limit. Contributions can no longer be made once Medicare starts.",
+   s:[["Rev. Proc. 2025-19","https://www.irs.gov/pub/irs-drop/rp-25-19.pdf"]]},
+  {id:"hsa_family", t:"HSA, family cover", base:8750, catch:{55:1000},
+   needs:"hdhp",
+   d:"Only available with a qualifying high-deductible plan. The extra at 55 is per person, so two spouses need two accounts to claim it twice.",
+   s:[["Rev. Proc. 2025-19","https://www.irs.gov/pub/irs-drop/rp-25-19.pdf"]]},
+  {id:"fsa", t:"Health FSA", base:3400, catch:{},
+   d:"Money set aside for medical costs, from your pay before tax. Holding a general-purpose FSA stops you from contributing to an HSA.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"dcfsa", t:"Dependent care FSA", base:7500, catch:{},
+   d:"Raised from $5,000 for 2026, the first change since 1986. It is a household limit, not a per-person one.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+  {id:"additions", t:"Total 401(k) additions", base:72000, catch:{},
+   d:"Everything that can land in the plan for you in one year: your own deferral, the employer match, and after-tax money. Catch-up sits outside this. The room between this and your own deferral is what a mega-backdoor Roth uses.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"simple", t:"SIMPLE IRA deferral", base:17000, catch:{50:4000},
+   d:"A smaller workplace plan, common at small employers. A plan for an employer with 25 or fewer people can use a higher limit of $18,100.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"qcd", t:"Charity gift from an IRA", base:111000, catch:{},
+   ageMin:70,
+   d:"From age 70 and a half you can send money straight from an IRA to a charity. It never lands in your income, so it does not push up any of the income measures on this page, and it counts toward a required withdrawal.",
+   s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
+  {id:"gift", t:"Gift to one person, tax free", base:19000, catch:{},
+   d:"You can give this much to any one person in the year without using up any of your lifetime exclusion and without filing a gift tax return. A married couple can give twice this to the same person.",
+   s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
+];
+
+/* ===================== constants from the 2026 tables ===================== */
+const STD = { single:16100, mfj:32200, mfs:16100, hoh:24150 };
+const STD_AGED = { single:2050, mfj:1650, mfs:1650, hoh:2050 };
+const FPL1 = 15650, FPL_STEP = 5500;   /* 2025 guidelines, used for 2026 cover */
+const SEC = ['rates','accounts','deductions','credits','health','filing'];
+const SEC_NAME = { rates:'Rates and payroll', accounts:'Accounts',
+  deductions:'Deductions', credits:'Credits', health:'Health and Medicare',
+  filing:'Filing' };
+const SEC_SHORT = { rates:'Rates', accounts:'Accounts', deductions:'Deductions',
+  credits:'Credits', health:'Health', filing:'Filing' };
+/* A phone gives a label column about eighteen characters wide. Past that the
+   browser clips mid-word, which is worse than a shorter name. */
+const narrow = () => window.innerWidth <= 720;
+const labelOf = r => (narrow() && r.st) ? r.st : r.t;
+const secName = s => narrow() ? SEC_SHORT[s] : SEC_NAME[s];
+const AXIS_MIN = 0;
+const STATUS_NAME = { single:'single', mfj:'jointly', mfs:'separately',
+                      hoh:'as head of household' };
+
+/* ============================== the state ============================== */
+const S = {
+  status:'single', age:35, children:0, axis:250000, income:120000,
+  mix:{ wage:120000, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 },
+  adj:{ k401:0, hsa:0, iso:0 },
+  oth:{ tips:0, ot:0, car:0, ss:0, hdhp:false, own:false },
+  off:{}, picked:null,
+};
+
+function save(){ try{ localStorage.setItem('ts.state', JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem('ts.state');
+    if(!raw) return false;
+    const p = JSON.parse(raw);
+    Object.assign(S, p);
+    S.mix = Object.assign(S.mix, p.mix||{});
+    S.adj = Object.assign(S.adj, p.adj||{});
+    S.oth = Object.assign(S.oth, p.oth||{});
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ============================== the engine ============================== */
+/* Every rule keys off one measure of income, and the measures do not agree
+   with each other. The chart axis is total income, so each threshold has to be
+   carried back into total-income space before it can be drawn. Because every
+   measure rises with total income, one bisection does that for all of them. */
+
+function mixTotal(){
+  const m = S.mix;
+  return m.wage + m.bonus + m.rsu + m.int + m.qdiv + m.ltg + m.stg + m.exempt;
+}
+
+/* All the measures at one point on the axis. */
+function measure(total){
+  const m = S.mix, a = S.adj;
+  const base = mixTotal();
+  const f = base > 0 ? total / base : 1;
+  const wage  = base > 0 ? (m.wage + m.bonus + m.rsu) * f : total;
+  const supp  = base > 0 ? (m.bonus + m.rsu) * f : 0;
+  const exempt = base > 0 ? m.exempt * f : 0;
+
+  /* A 401(k) deferral escapes income tax but not payroll tax. An HSA taken
+     from pay escapes both. That difference is why these are separate. */
+  const k401 = Math.min(a.k401, wage);
+  const hsa  = Math.min(a.hsa, Math.max(0, wage - k401));
+  /* Tax-exempt interest is inside the axis total but outside AGI, and most
+     MAGI definitions add it straight back. Keeping the two steps separate is
+     what makes a muni bond look different from a bank account here. */
+  const agi  = Math.max(0, total - exempt - k401 - hsa);
+  const magi = agi + exempt;
+
+  let ded = STD[S.status];
+  if (S.age >= 65) ded += STD_AGED[S.status];
+  if (S.age >= 65 && S.status !== 'mfs') {
+    const st = S.status === 'mfj' ? 150000 : 75000;
+    ded += Math.max(0, 6000 - 0.06 * Math.max(0, magi - st));
+  }
+
+  return {
+    total: total,
+    agi: agi,
+    magi: magi,
+    taxable: Math.max(0, agi - ded),
+    wages: Math.max(0, wage - hsa),
+    amti: agi + a.iso,
+    supplemental: supp,
+    priorwages: wage,
+    provisional: magi + 0.5 * S.oth.ss,
+    deduction: ded,
+  };
+}
+
+/* Find the total income at which a measure first reaches a target. Returns
+   null when the measure never gets there inside the range we care about. */
+function solve(name, target){
+  if (target === null || target === undefined) return null;
+  /* Asking for "zero taxable income" would answer zero, which would draw the
+     10% bracket as if it started at the first dollar you earn. It does not.
+     It starts once the standard deduction is used up. */
+  target = Math.max(target, 1);
+  if (target <= measure(0)[name]) return 0;
+  let hi = 8000000;
+  if (measure(hi)[name] < target) return null;
+  let lo = 0;
+  for (let i = 0; i < 60; i++){
+    const mid = (lo + hi) / 2;
+    if (measure(mid)[name] < target) lo = mid; else hi = mid;
+  }
+  return hi;
+}
+
+/* Three of the new deductions and the child credit end at a point that depends
+   on how much of the thing you have, not on a figure in the tables. */
+function movingEnd(rule, startMagi){
+  const o = S.oth, mfj = S.status === 'mfj';
+  /* Tips and overtime round the excess DOWN to a whole $1,000, so the benefit
+     survives until the excess reaches a full step. The car loan deduction and
+     the child credit round UP, so they die one whole step earlier. Getting
+     this backwards moves an edge by $1,000, which is why they are separate. */
+  const downStep = (d, rate) => d <= 0 ? null : startMagi + 1000 * Math.ceil(d / rate);
+  const upStep   = (d, rate) => d <= 0 ? null : startMagi + 1000 * (Math.ceil(d / rate) - 1);
+
+  if (rule.id === 'tips_deduction')     return downStep(Math.min(o.tips, 25000), 100);
+  if (rule.id === 'overtime_deduction') return downStep(Math.min(o.ot, mfj ? 25000 : 12500), 100);
+  if (rule.id === 'car_loan_deduction') return upStep(Math.min(o.car, 10000), 200);
+  if (rule.id === 'ctc_phaseout')       return upStep(2200 * S.children, 50);
+  return null;
+}
+
+/* The ACA cliff sits at 400% of the poverty level for the household, so it
+   moves with the size of the household rather than sitting at one number. */
+function acaCliff(){
+  const people = (S.status === 'mfj' ? 2 : 1) + S.children;
+  return 4 * (FPL1 + FPL_STEP * (people - 1));
+}
+
+/* Does this rule apply at all, given who the reader is? */
+function applies(rule){
+  const e = rule.e[S.status];
+  if (!e || (e[0] === null && e[1] === null)) return false;
+  if (rule.ageMin && S.age < rule.ageMin) return false;
+  if (rule.ageMax && S.age > rule.ageMax) return false;
+  if (rule.needs === 'tips' && S.oth.tips <= 0) return false;
+  if (rule.needs === 'overtime' && S.oth.ot <= 0) return false;
+  if (rule.needs === 'carloan' && S.oth.car <= 0) return false;
+  if (rule.needs === 'children' && S.children <= 0) return false;
+  if (rule.needs === 'ownplan' && !S.oth.own) return false;
+  if (rule.needs === 'ssben' && S.oth.ss <= 0) return false;
+  if (rule.needs === 'supp' && (S.mix.bonus + S.mix.rsu) <= 0) return false;
+  return true;
+}
+
+/* A rule, resolved onto the total-income axis. */
+function place(rule){
+  let [lo, hi] = rule.e[S.status];
+  if (rule.id === 'aca_cliff') lo = acaCliff();
+  if (hi === null && rule.shape === 'step'){
+    hi = movingEnd(rule, lo);
+    if (hi === null) return null;
+  }
+  const a = solve(rule.m, lo);
+  const b = hi === null ? null : solve(rule.m, hi);
+  if (a === null) return null;
+  return { lo: a < 100 ? 0 : a, hi:b, rawLo:lo, rawHi:hi };
+}
+
+/* Where the reader sits relative to a rule. */
+function standing(pos, shape){
+  const t = S.income;
+  if (t < pos.lo) return 'below';
+  /* A cliff has no inside. You are on one side of it or the other. */
+  if (shape === 'cliff') return 'above';
+  if (pos.hi !== null && t >= pos.hi) return 'above';
+  return 'inside';
+}
+
+/* ============================== formatting ============================== */
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+function fmtShort(n){
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(n % 1000000 ? 1 : 0) + 'M';
+  if (n >= 1000) return '$' + Math.round(n / 1000) + 'k';
+  return '$' + Math.round(n);
+}
+
+/* ============================== rendering ============================== */
+const $ = id => document.getElementById(id);
+const xOf = v => Math.max(0, Math.min(100, (v - AXIS_MIN) / (S.axis - AXIS_MIN) * 100));
+
+function renderTicks(){
+  const el = $('ticks');
+  el.textContent = '';
+  const step = tickStep();
+  for (let v = AXIS_MIN; v <= S.axis; v += step){
+    const d = document.createElement('div');
+    d.className = 'tick' + (v % (step * 2) === 0 ? ' major' : '');
+    d.style.left = xOf(v) + '%';
+    if (v < S.axis){
+      const s = document.createElement('span');
+      s.textContent = v === 0 ? '$0' : fmtShort(v);
+      d.appendChild(s);
+    }
+    el.appendChild(d);
+  }
+}
+
+function tickStep(){
+  const span = S.axis - AXIS_MIN;
+  return span <= 250000 ? 25000 : span <= 500000 ? 50000
+       : span <= 1000000 ? 100000 : 250000;
+}
+
+function renderChart(){
+  const track = $('track');
+  track.textContent = '';
+  let shown = 0, hiddenOff = 0;
+
+  for (const sec of SEC){
+    if (S.off[sec]) continue;
+    const rules = RULES.filter(r => r.sec === sec && applies(r));
+    const placed = [];
+    for (const r of rules){
+      const p = place(r);
+      if (p) placed.push({ r:r, p:p });
+    }
+    if (!placed.length) continue;
+    placed.sort((a, b) => (a.r.o - b.r.o) || (a.p.lo - b.p.lo));
+
+    const h = document.createElement('div');
+    h.className = 'sechead';
+    h.style.color = 'var(--sec-' + sec + ')';
+    h.innerHTML = '<span>' + secName(sec) + '</span><span class="n">' +
+      placed.length + (placed.length === 1 ? ' rule' : ' rules') + '</span>';
+    track.appendChild(h);
+
+    for (const item of placed){
+      const r = item.r, p = item.p;
+      const offscale = p.lo > S.axis;
+      if (offscale) hiddenOff++;
+      shown++;
+
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'row' + (offscale ? ' off' : '');
+      row.style.color = 'var(--sec-' + sec + ')';
+      row.setAttribute('aria-pressed', S.picked === r.id ? 'true' : 'false');
+      row.dataset.id = r.id;
+
+      const lab = document.createElement('div');
+      lab.className = 'lab';
+      lab.innerHTML = '<span class="dot"></span><span class="txt"></span>';
+      lab.querySelector('.txt').textContent = labelOf(r);
+      lab.title = r.t;
+      row.appendChild(lab);
+
+      const plot = document.createElement('div');
+      plot.className = 'plot';
+      if (!offscale){
+        const bar = document.createElement('div');
+        bar.className = 'bar ' + r.shape;
+        const left = xOf(p.lo);
+        const right = p.hi === null ? 100 : xOf(p.hi);
+        bar.style.left = left + '%';
+        bar.style.width = Math.max(0.35, right - left) + '%';
+        const t = document.createElement('span');
+        t.className = 'btxt';
+        t.textContent = p.hi === null ? fmtShort(p.lo) + ' and up'
+                                      : fmtShort(p.lo) + '\u2013' + fmtShort(p.hi);
+        bar.appendChild(t);
+        plot.appendChild(bar);
+      } else {
+        const t = document.createElement('span');
+        t.className = 'btxt';
+        t.style.cssText = 'position:absolute;right:6px;top:0;bottom:0;color:var(--faint)';
+        t.textContent = 'starts at ' + fmtShort(p.lo);
+        plot.appendChild(t);
+      }
+      row.appendChild(plot);
+      track.appendChild(row);
+    }
+  }
+
+  /* Gridlines go in last so they can span the finished height, and they sit
+     under the rows because the rows carry the reading. */
+  const gl = document.createElement('div');
+  gl.className = 'glines';
+  gl.style.left = 'var(--label-w)';
+  const step = tickStep();
+  for (let v = step; v < S.axis; v += step){
+    const d = document.createElement('div');
+    d.className = 'gline' + (v % (step * 2) === 0 ? ' major' : '');
+    d.style.left = xOf(v) + '%';
+    gl.appendChild(d);
+  }
+  track.insertBefore(gl, track.firstChild);
+
+  if (!shown){
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = 'No rules to show. Turn a section back on above.';
+    track.appendChild(e);
+  }
+
+  /* A caption that does not fit is worse than no caption, so measure once the
+     bars are laid out and drop the ones that would be clipped. */
+  for (const t2 of track.querySelectorAll('.bar .btxt')){
+    if (t2.scrollWidth > t2.clientWidth + 1) t2.remove();
+  }
+
+  /* One marker line for the whole track, laid over the plot column. */
+  const mark = document.createElement('div');
+  mark.className = 'mark';
+  mark.style.left = 'calc(var(--label-w) + (100% - var(--label-w)) * ' + (xOf(S.income) / 100) + ')';
+  track.appendChild(mark);
+}
+
+function renderMarkerCap(){
+  const r = $('ticks');
+  const old = document.querySelector('.markcap');
+  if (old) old.remove();
+  const cap = document.createElement('div');
+  cap.className = 'markcap';
+  cap.textContent = fmt(S.income);
+  cap.style.left = xOf(S.income) + '%';
+  cap.style.top = '3px';
+  r.appendChild(cap);
+}
+
+function renderSummary(){
+  const M = measure(S.income);
+  const st = S.status;
+
+  const band = ORD[st].find(b => M.taxable >= b[0] && (b[1] === null || M.taxable < b[1]));
+  const lt = LTG[st];
+  const ltRate = M.taxable <= lt[0] ? '0%' : M.taxable <= lt[1] ? '15%' : '20%';
+
+  /* Count what is happening to the reader right now. */
+  let inside = 0, lost = 0, cliffs = 0;
+  for (const r of RULES){
+    if (!applies(r)) continue;
+    const p = place(r);
+    if (!p) continue;
+    const s = standing(p, r.shape);
+    if (r.shape === 'cliff'){ if (s === 'above') cliffs++; continue; }
+    if (r.shape === 'band' || r.shape === 'open') continue;
+    if (s === 'inside') inside++;
+    else if (s === 'above') lost++;
+  }
+
+  const cells = [
+    ['Marginal rate', band ? band[2] + '%' : '\u2014', 'on your next dollar of pay'],
+    ['Long-term gain', ltRate, 'on your next dollar of gain'],
+    ['Taxable income', fmt(M.taxable), 'after a ' + fmt(M.deduction) + ' deduction'],
+    ['Phasing out', String(inside), inside === 1 ? 'benefit is shrinking now' : 'benefits are shrinking now'],
+    ['Already gone', String(lost), lost === 1 ? 'benefit is fully phased out' : 'benefits are fully phased out'],
+    ['Cliffs passed', String(cliffs), cliffs === 1 ? 'hard edge is behind you' : 'hard edges are behind you'],
+  ];
+  $('summary').innerHTML = cells.map(c =>
+    '<div class="stat"><div class="k">' + c[0] + '</div><div class="v">' + c[1] +
+    '</div><div class="n">' + c[2] + '</div></div>').join('');
+}
+
+function limitFor(l){
+  /* Some of these change with filing status rather than with age, so the base
+     is either one number or one number per status. */
+  const base = typeof l.base === 'object' ? l.base[S.status] : l.base;
+  let extra = 0;
+  const keys = Object.keys(l.catch).map(Number).sort((a, b) => a - b);
+  for (const k of keys) if (S.age >= k) extra = l.catch[k];
+  return { total: base + extra, extra: extra, base: base };
+}
+
+function renderLimits(){
+  const box = $('limits');
+  box.textContent = '';
+  for (const l of LIMITS){
+    if (l.needs === 'hdhp' && !S.oth.hdhp) continue;
+    if (l.ageMin && S.age < l.ageMin) continue;
+    const r = limitFor(l);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lim';
+    b.dataset.limit = l.id;
+    b.innerHTML = '<span class="lt"></span><span class="lv"></span>';
+    b.querySelector('.lt').textContent = l.t;
+    b.querySelector('.lv').innerHTML = fmt(r.total) +
+      (r.extra ? ' <small>incl. ' + fmt(r.extra) + '</small>' : '');
+    box.appendChild(b);
+  }
+  if (!box.children.length){
+    box.innerHTML = '<span class="lt" style="color:var(--faint)">' +
+      'Nothing to show. Tick the high-deductible plan box for the HSA limits.</span>';
+  }
+}
+
+function renderFilters(){
+  const f = $('filters');
+  f.textContent = '';
+  for (const sec of SEC){
+    const n = RULES.filter(r => r.sec === sec && applies(r)).length;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.sec = sec;
+    b.style.color = S.off[sec] ? '' : 'var(--sec-' + sec + ')';
+    b.setAttribute('aria-pressed', S.off[sec] ? 'false' : 'true');
+    b.innerHTML = '<span class="dot"></span>' + secName(sec) + ' ' + n;
+    f.appendChild(b);
+  }
+}
+
+const WHERE = {
+  below: ['Below this', 'You have not reached this yet.'],
+  inside: ['You are here', 'This applies to you right now.'],
+  above: ['Past this', 'You are above the top of this band.'],
+};
+
+function renderDetail(){
+  const d = $('detail');
+  if (!S.picked){
+    d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any row</h3>' +
+      '<p>Select a bar to read what it is, where its edges fall for you, and ' +
+      'which document the figures come from. A solid bar is a fixed band. A bar ' +
+      'that fades is a benefit that slides away. A staircase drops in steps. A ' +
+      'hatched bar with a hard left edge is a cliff, where one dollar changes ' +
+      'the answer.</p>';
+    return;
+  }
+  const lim = LIMITS.find(l => l.id === S.picked);
+  if (lim){
+    const r = limitFor(lim);
+    d.innerHTML = '<div class="kicker">Limit for age ' + S.age + '</div>' +
+      '<h3>' + esc(lim.t) + '</h3>' +
+      '<div class="where">' + fmt(r.total) + ' for you this year</div>' +
+      '<p>' + esc(lim.d) + '</p>' +
+      '<div class="numbers">' +
+        num('Base amount', fmt(r.base)) +
+        (r.extra ? num('Extra for your age', fmt(r.extra)) : '') +
+        num('Your total', fmt(r.total)) +
+      '</div>' + srcHtml(lim.s);
+    return;
+  }
+  const rule = RULES.find(r => r.id === S.picked);
+  if (!rule){ S.picked = null; return renderDetail(); }
+  const p = place(rule);
+  if (!p){
+    d.innerHTML = '<div class="kicker">' + SEC_NAME[rule.sec] + '</div><h3>' +
+      esc(rule.t) + '</h3><p>This one does not apply to your filing status or ' +
+      'your situation, so it has no edge to show.</p>' + srcHtml(rule.s);
+    return;
+  }
+  const s = standing(p, rule.shape);
+  const measureName = {
+    taxable:'taxable income', agi:'adjusted gross income', magi:'modified AGI',
+    wages:'wages', amti:'AMT income', supplemental:'bonus and vesting pay',
+    priorwages:'last year\u2019s pay', provisional:'provisional income',
+  }[rule.m] || rule.m;
+
+  const M = measure(S.income);
+  let next = '';
+  if (s === 'below') next = 'It starts ' + fmt(p.lo - S.income) + ' above where you are.';
+  else if (s === 'inside' && p.hi !== null) next = 'It runs out ' + fmt(p.hi - S.income) + ' above where you are.';
+
+  d.innerHTML = '<div class="kicker">' + SEC_NAME[rule.sec] + '</div>' +
+    '<h3>' + esc(rule.t) + '</h3>' +
+    '<div class="where" style="border-color:var(--sec-' + rule.sec + ')">' +
+      WHERE[s][0] + ' \u00b7 ' + WHERE[s][1] + (next ? ' ' + next : '') + '</div>' +
+    '<p>' + esc(rule.d) + '</p>' +
+    '<div class="numbers">' +
+      num('Measured on', measureName) +
+      num('Your ' + measureName, fmt(M[rule.m])) +
+      num('Edge, on that measure', p.rawHi === null ? fmt(p.rawLo) + ' and up'
+          : fmt(p.rawLo) + ' to ' + fmt(p.rawHi)) +
+      num('Edge, on total income', p.hi === null ? fmt(p.lo) + ' and up'
+          : fmt(p.lo) + ' to ' + fmt(p.hi)) +
+    '</div>' + srcHtml(rule.s);
+}
+
+function num(k, v){ return '<div><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div></div>'; }
+function srcHtml(list){
+  return '<div class="srcs">' + list.map(s =>
+    '<a href="' + esc(s[1]) + '" target="_blank" rel="noopener">' + esc(s[0]) + '</a>'
+  ).join('') + '</div>';
+}
+function esc(s){
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+
+/* Bracket tables live here rather than in the rules, because the summary panel
+   needs to read them directly rather than through the axis. */
+const ORD = {
+ single:[[0,12400,10],[12400,50400,12],[50400,105700,22],[105700,201775,24],[201775,256225,32],[256225,640600,35],[640600,null,37]],
+ mfj:[[0,24800,10],[24800,100800,12],[100800,211400,22],[211400,403550,24],[403550,512450,32],[512450,768700,35],[768700,null,37]],
+ mfs:[[0,12400,10],[12400,50400,12],[50400,105700,22],[105700,201775,24],[201775,256225,32],[256225,384350,35],[384350,null,37]],
+ hoh:[[0,17700,10],[17700,67450,12],[67450,105700,22],[105700,201750,24],[201750,256200,32],[256200,640600,35],[640600,null,37]],
+};
+const LTG = { single:[49450,545500], mfj:[98900,613700], mfs:[49450,306850], hoh:[66200,579600] };
+
+function renderAll(){
+  renderTicks();
+  renderMarkerCap();
+  renderChart();
+  renderSummary();
+  renderLimits();
+  renderFilters();
+  renderDetail();
+  $('incomeBig').textContent = fmt(S.income);
+  $('limitsHead').textContent = 'Your figures at age ' + S.age + ', filing ' + STATUS_NAME[S.status];
+}
+
+/* ============================== wiring ============================== */
+function readMix(){
+  S.mix.wage = +$('mWage').value || 0;
+  S.mix.bonus = +$('mBonus').value || 0;
+  S.mix.rsu = +$('mRsu').value || 0;
+  S.mix.int = +$('mInt').value || 0;
+  S.mix.qdiv = +$('mQdiv').value || 0;
+  S.mix.ltg = +$('mLtg').value || 0;
+  S.mix.stg = +$('mStg').value || 0;
+  S.mix.exempt = +$('mExempt').value || 0;
+}
+function writeMix(){
+  $('mWage').value = S.mix.wage; $('mBonus').value = S.mix.bonus;
+  $('mRsu').value = S.mix.rsu; $('mInt').value = S.mix.int;
+  $('mQdiv').value = S.mix.qdiv; $('mLtg').value = S.mix.ltg;
+  $('mStg').value = S.mix.stg; $('mExempt').value = S.mix.exempt;
+}
+function writeControls(){
+  $('status').value = S.status; $('age').value = S.age;
+  $('children').value = S.children; $('axis').value = String(S.axis);
+  $('income').max = String(S.axis);
+  $('income').value = String(Math.min(S.income, S.axis));
+  $('a401k').value = S.adj.k401; $('aHsa').value = S.adj.hsa; $('aIso').value = S.adj.iso;
+  $('oTips').value = S.oth.tips; $('oOt').value = S.oth.ot;
+  $('oCar').value = S.oth.car; $('oSs').value = S.oth.ss;
+  $('oHdhp').checked = S.oth.hdhp; $('oOwn').checked = S.oth.own;
+  writeMix();
+}
+
+function pickAxis(v){
+  return v <= 200000 ? 250000 : v <= 420000 ? 500000 : v <= 850000 ? 1000000 : 1500000;
+}
+
+function bump(){ save(); renderAll(); }
+
+$('income').addEventListener('input', e => {
+  S.income = +e.target.value;
+  /* Keep the mix in step with the slider so the two never disagree. */
+  const base = mixTotal();
+  if (base > 0){
+    const f = S.income / base;
+    for (const k of ['wage','bonus','rsu','int','qdiv','ltg','stg','exempt'])
+      S.mix[k] = Math.round(S.mix[k] * f);
+  } else {
+    S.mix.wage = S.income;
+  }
+  writeMix();
+  bump();
+});
+
+$('status').addEventListener('change', e => { S.status = e.target.value; bump(); });
+$('age').addEventListener('input', e => { S.age = Math.max(0, +e.target.value || 0); bump(); });
+$('children').addEventListener('input', e => { S.children = Math.max(0, +e.target.value || 0); bump(); });
+$('axis').addEventListener('change', e => {
+  S.axis = +e.target.value;
+  $('income').max = String(S.axis);
+  if (S.income > S.axis){ S.income = S.axis; $('income').value = String(S.axis); }
+  bump();
+});
+
+for (const id of ['mWage','mBonus','mRsu','mInt','mQdiv','mLtg','mStg','mExempt']){
+  $(id).addEventListener('input', () => {
+    readMix();
+    S.income = mixTotal();
+    if (S.income > S.axis){ S.axis = pickAxis(S.income); }
+    $('axis').value = String(S.axis);
+    $('income').max = String(S.axis);
+    $('income').value = String(S.income);
+    bump();
+  });
+}
+$('a401k').addEventListener('input', e => { S.adj.k401 = +e.target.value || 0; bump(); });
+$('aHsa').addEventListener('input', e => { S.adj.hsa = +e.target.value || 0; bump(); });
+$('aIso').addEventListener('input', e => { S.adj.iso = +e.target.value || 0; bump(); });
+$('oTips').addEventListener('input', e => { S.oth.tips = +e.target.value || 0; bump(); });
+$('oOt').addEventListener('input', e => { S.oth.ot = +e.target.value || 0; bump(); });
+$('oCar').addEventListener('input', e => { S.oth.car = +e.target.value || 0; bump(); });
+$('oSs').addEventListener('input', e => { S.oth.ss = +e.target.value || 0; bump(); });
+$('oHdhp').addEventListener('change', e => { S.oth.hdhp = e.target.checked; bump(); });
+$('oOwn').addEventListener('change', e => { S.oth.own = e.target.checked; bump(); });
+
+$('filters').addEventListener('click', e => {
+  const b = e.target.closest('button[data-sec]');
+  if (!b) return;
+  S.off[b.dataset.sec] = !S.off[b.dataset.sec];
+  bump();
+});
+$('track').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if (!row) return;
+  S.picked = S.picked === row.dataset.id ? null : row.dataset.id;
+  bump();
+  if (S.picked) $('detail').scrollIntoView({ block:'nearest', behavior:'smooth' });
+});
+$('limits').addEventListener('click', e => {
+  const b = e.target.closest('button[data-limit]');
+  if (!b) return;
+  S.picked = S.picked === b.dataset.limit ? null : b.dataset.limit;
+  bump();
+});
+
+/* theme */
+function setTheme(t){
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem('ts.theme', t); }catch(e){}
+  for (const b of document.querySelectorAll('[data-theme-set]'))
+    b.setAttribute('aria-pressed', b.dataset.themeSet === t ? 'true' : 'false');
+}
+for (const b of document.querySelectorAll('[data-theme-set]'))
+  b.addEventListener('click', () => setTheme(b.dataset.themeSet));
+(function(){
+  let t = 'auto';
+  try{ t = localStorage.getItem('ts.theme') || 'auto'; }catch(e){}
+  setTheme(t);
+})();
+
+/* first run */
+function openModal(){
+  $('scrim').hidden = false;
+  $('mStatus').value = S.status;
+  $('mAge').value = S.age;
+  $('mIncome').value = S.income;
+  setTimeout(() => $('mIncome').focus(), 40);
+}
+$('mGo').addEventListener('click', () => {
+  S.status = $('mStatus').value;
+  S.age = Math.max(0, +$('mAge').value || 0);
+  S.income = Math.max(0, +$('mIncome').value || 0);
+  S.axis = pickAxis(S.income);
+  S.mix = { wage:S.income, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 };
+  $('scrim').hidden = true;
+  writeControls();
+  bump();
+});
+$('scrim').addEventListener('click', e => { if (e.target === $('scrim')) $('scrim').hidden = true; });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('scrim').hidden) $('scrim').hidden = true;
+});
+
+/* go */
+const returning = load();
+writeControls();
+renderAll();
+if (!returning) openModal();
+window.__ts = { S:S, measure:measure, solve:solve, place:place, applies:applies,
+                movingEnd:movingEnd, acaCliff:acaCliff, limitFor:limitFor,
+                RULES:RULES, LIMITS:LIMITS, render:renderAll };
+/* Crossing the phone breakpoint changes which labels fit, so a resize has to
+   redraw the rows and not only the ruler. Debounced, because a drag on a
+   desktop window fires this continuously. */
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  renderTicks();
+  renderMarkerCap();
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderAll, 120);
+});
+</script>
+</body>
+</html>

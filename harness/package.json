@@ -1,0 +1,14 @@
+{
+  "name": "tax-slider-harness",
+  "private": true,
+  "description": "Browser tests and source checks for Tax Slider.",
+  "scripts": {
+    "build": "python3 build.py",
+    "test": "node test.js",
+    "shots": "node test.js --shots",
+    "sources": "python3 rule_urls.py > /tmp/rule-urls.txt && node verify-sources.js /tmp/rule-urls.txt"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
