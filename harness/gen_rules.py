@@ -222,14 +222,14 @@ rule(id='savers_credit', section='accounts', title='Saver\u2019s Credit',
 # ---- section: deductions ---------------------------------------------------
 
 rule(id='salt_phasedown', section='deductions', title='SALT cap phase-out', measure='magi',
-     shape='phaseout',
+     shape='phaseout', floor=True,
      edges=by((505000, 606333), (505000, 606333), (252500, 303167), (505000, 606333)),
      d=('SALT means state and local tax. The cap on that deduction is $40,400 for '
     '2026, far more than the old $10,000. After the start the cap falls by 30 '
     'cents for each dollar of income. The floor is $10,000.'),
      s=src('salt', 'rp2532'))
 
-rule(id='qbi_phasein', section='deductions', title='QBI limits phase in', measure='taxable',
+rule(id='qbi_phasein', section='deductions', title='QBI deduction limits', measure='taxable',
      shape='phaseout',
      edges=by((201750, 276750), (403500, 553500), (201775, 276775), (201750, 276750)),
      d=('QBI means qualified business income. Under the start, the 20 percent '
@@ -320,7 +320,7 @@ rule(id='adoption_credit', section='credits', title='Adoption credit phase-out',
      s=src('adopt', 'rp2532'))
 
 rule(id='cdcc_rate', section='credits', title='Care credit rate falls',
-     measure='agi', shape='step',
+     measure='agi', shape='step', floor=True,
      edges=by((15000, 75000), (15000, 150000), (15000, 75000), (15000, 75000)),
      d=('The credit for child or adult care starts at 50 percent of what you '
     'spend. It drops one point for each $2,000 of income more than $15,000. '
@@ -392,67 +392,67 @@ rule(id='estimated_110', section='filing', title='110% safe harbor', measure='ag
 # from age and shown in the summary panel.
 
 LIMITS = [
- dict(id='stdded', title='Standard deduction',
+ dict(id='stdded', group='take', title='Standard deduction',
       base=by(16100, 32200, 16100, 24150), catch={},
       d=('What you subtract before the brackets apply, if you do not itemize. '
          'A person aged 65 or over adds more, and a blind person adds the same '
          'amount again.'),
       s=src('rp2532')),
- dict(id='aged', title='Extra deduction at 65',
+ dict(id='aged', group='take', title='Extra deduction at 65',
       base=by(2050, 1650, 1650, 2050), catch={}, ageMin=65,
       d=('On top of the standard deduction, and separate from the $6,000 senior '
          'deduction that the 2025 law added. A blind person adds the same amount '
          'a second time.'),
       s=src('rp2532')),
- dict(id='deferral', title='401(k) and 403(b) deferral', base=24500,
+ dict(id='deferral', group='put', title='401(k) and 403(b) deferral', base=24500,
       catch={50: 8000, 60: 11250, 64: 8000},
       d=('The most you can contribute to a workplace plan from your own pay. '
     'Employer money does not count against this. The extra amount allowed at '
     '50 rises again for the four years from 60 to 63, then drops back at 64.'),
       s=src('n2567')),
- dict(id='ira', title='IRA contribution', base=7500, catch={50: 1100},
+ dict(id='ira', group='put', title='IRA contribution', base=7500, catch={50: 1100},
       d=('One limit across every traditional and Roth IRA you own. It is not a '
     'limit for each account. You need earned income at least equal to the '
     'amount you contribute.'),
       s=src('n2567')),
- dict(id='hsa_self', title='HSA, self-only cover', base=4400, catch={55: 1000},
+ dict(id='hsa_self', group='put', title='HSA, self-only cover', base=4400, catch={55: 1000},
       needs='hdhp',
       d=('Only available with a qualifying high-deductible plan. Employer money '
          'counts against this limit. Contributions can no longer be made once '
          'Medicare starts.'),
       s=src('rp2519')),
- dict(id='hsa_family', title='HSA, family cover', base=8750, catch={55: 1000},
+ dict(id='hsa_family', group='put', title='HSA, family cover', base=8750, catch={55: 1000},
       needs='hdhp',
       d=('Only available with a qualifying high-deductible plan. The extra at 55 '
          'is per person, so two spouses need two accounts to claim it twice.'),
       s=src('rp2519')),
- dict(id='fsa', title='Health FSA', base=3400, catch={},
+ dict(id='fsa', group='put', title='Health FSA', base=3400, catch={},
       d=('Money set aside for medical costs, from your pay before tax. If you have '
     'a general-purpose FSA, you cannot contribute to an HSA.'),
       s=src('rp2532')),
- dict(id='dcfsa', title='Dependent care FSA', base=7500, catch={},
+ dict(id='dcfsa', group='put', title='Dependent care FSA', base=7500, catch={},
       d=('Raised from $5,000 for 2026, the first change since 1986. It is a '
          'household limit, not a per-person one.'),
       s=src('rp2532')),
- dict(id='additions', title='Total 401(k) additions', base=72000, catch={},
+ dict(id='additions', group='put', title='Total 401(k) additions', base=72000, catch={},
       d=('Everything that can land in the plan for you in one year: your own '
     'contribution, the employer match, and after-tax money. Catch-up sits '
     'outside this. The gap between this limit and your own contribution is '
     'the room for a large after-tax contribution. Some plans let that money '
     'move to a Roth account later.'),
       s=src('n2567')),
- dict(id='simple', title='SIMPLE IRA deferral', base=17000,
+ dict(id='simple', group='put', title='SIMPLE IRA deferral', base=17000,
       catch={50: 4000},
       d=('A smaller workplace plan, common at small employers. A plan for an '
          'employer with 25 or fewer people can use a higher limit of $18,100.'),
       s=src('n2567')),
- dict(id='qcd', title='Charity gift from an IRA', base=111000, catch={}, ageMin=70,
+ dict(id='qcd', group='give', title='Charity gift from an IRA', base=111000, catch={}, ageMin=70,
       d=('From age 70 and a half you can send money straight from an IRA to a '
     'charity. The gift is not part of your income, so it does not raise any '
     'income measure on this page. It also counts toward the minimum amount '
     'you must take from the IRA each year.'),
       s=src('n2567')),
- dict(id='gift', title='Gift to one person, tax free', base=19000, catch={},
+ dict(id='gift', group='give', title='Gift to one person, tax free', base=19000, catch={},
       d=('You can give this much to any one person in the year with no gift tax '
     'return. It does not reduce the lifetime amount you can give before gift '
     'tax applies. A married couple can give twice this to the same person.'),
@@ -466,6 +466,18 @@ SHORT = {'ltcg_0': '0% gains band', 'ltcg_15': '15% gains band', 'ltcg_20': '20%
 for _r in RULES:
     if _r['id'] in SHORT:
         _r['short'] = SHORT[_r['id']]
+
+# Why a rule is not drawn, phrased for the reader. The page shows these
+# instead of leaving a section silently empty.
+NEEDS_REASON = {
+ 'tips':     'tip income',
+ 'overtime': 'overtime pay',
+ 'carloan':  'car loan interest',
+ 'children': 'a child under 17',
+ 'ownplan':  'your own health plan',
+ 'ssben':    'a Social Security benefit',
+ 'supp':     'a bonus or vesting stock',
+}
 
 # --------------------------------------------------------------- emitters ---
 
@@ -488,9 +500,14 @@ def emit():
         if r.get('age_min'): out.append('   ageMin:%d,' % r['age_min'])
         if r.get('age_max'): out.append('   ageMax:%d,' % r['age_max'])
         if r.get('needs'):   out.append('   needs:%s,' % js(r['needs']))
+        if r.get('floor'):   out.append('   floor:true,')
         out.append('   d:%s,' % js(r['d']))
         out.append('   s:[%s]},' % ','.join('[%s,%s]' % (js(a), js(b)) for a, b in r['s']))
     out.append('];')
+    out.append('')
+    out.append('const NEEDS_REASON = {%s};'
+               % ','.join('%s:%s' % (js(k), js(v))
+                          for k, v in sorted(NEEDS_REASON.items())))
     out.append('')
     out.append('/* Driven by age, not by income, so these are not bars. */')
     out.append('const LIMITS = [')
@@ -499,8 +516,8 @@ def emit():
         b = l['base']
         bj = ('{%s}' % ','.join('%s:%d' % (k, b[k]) for k in STATUSES)
               if isinstance(b, dict) else str(b))
-        out.append('  {id:%s, t:%s, base:%s, catch:{%s},'
-                   % (js(l['id']), js(l['title']), bj, c))
+        out.append('  {id:%s, t:%s, base:%s, catch:{%s}, g:%s,'
+                   % (js(l['id']), js(l['title']), bj, c, js(l['group'])))
         if l.get('ageMin'): out.append('   ageMin:%d,' % l['ageMin'])
         if l.get('needs'): out.append('   needs:%s,' % js(l['needs']))
         out.append('   d:%s,' % js(l['d']))
@@ -558,8 +575,8 @@ def language_problems(where, text):
     return out
 
 RULE_KEYS = {'id','section','title','measure','shape','edges','d','s','order',
-             'age_min','age_max','needs','short'}
-LIMIT_KEYS = {'id','title','base','catch','d','s','ageMin','needs'}
+             'age_min','age_max','needs','short','floor'}
+LIMIT_KEYS = {'id','title','base','catch','d','s','ageMin','needs','group'}
 
 def check():
     bad = []
@@ -608,6 +625,8 @@ def check():
     ids = set()
     for l in LIMITS:
         if not l['s']: bad.append('no source on limit ' + l['id'])
+        if l.get('group') not in ('put', 'take', 'give'):
+            bad.append('limit %s has no group' % l['id'])
         if l['id'] in ids: bad.append('duplicate limit id: ' + l['id'])
         ids.add(l['id'])
         if isinstance(l['base'], dict):

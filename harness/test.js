@@ -450,6 +450,7 @@ function base(over) {
     const out = [];
     for (const el of document.querySelectorAll(
         '.hint, .detail p, .detail .where, .foot p, .modal p, .stat .n, '
+        + '#hiddenNote, .legend, .limgroup, .field .sub, .num .note, '
       + '.numbers .note, .empty, .sechead'))
       out.push(el.innerText.replace(/\s+/g, ' ').trim());
     return out.filter(Boolean);
@@ -470,6 +471,101 @@ function base(over) {
     }
   }
   eq('the page prose obeys the same language rules', proseFaults.join(' | '), '');
+
+
+  // --------------------------------------------------------------------
+  // The cold read broke on claims the page made and could not back up.
+  // --------------------------------------------------------------------
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await ask(page, base({ top: { status: 'single', age: 35, children: 0, income: 200000 } },
+                        ), 'return 0;');
+  await page.evaluate(() => window.__ts.render());
+
+  eq('the shape legend is on the page before any click',
+     await page.locator('#legend .lk').count(), 5);
+  await page.locator('.row').first().click();
+  eq('the shape legend survives a click',
+     await page.locator('#legend .lk').count(), 5);
+  await page.locator('.row').first().click();
+
+  ok('the rules the marker sits inside are marked on the chart',
+     (await page.locator('.row.here').count()) > 0,
+     await page.locator('.row.here').count(), '> 0');
+
+  // A count that points at nothing is the fault the cold read hit hardest.
+  const tallyMatch = [];
+  for (const key of ['inside', 'lost', 'cliffs']) {
+    const card = page.locator(`button.stat[data-only="${key}"]`);
+    if (!(await card.count())) continue;
+    const n = +(await card.locator('.v').textContent());
+    await card.click();
+    const rows = await page.locator('.row').count();
+    if (rows !== n) tallyMatch.push(`${key}: card says ${n}, chart shows ${rows}`);
+    await card.click();
+  }
+  eq('each summary count opens exactly the rows it counted', tallyMatch.join(' | '), '');
+
+  let zeroPressable = 0;
+  for (const c of await page.locator('.stat').all()) {
+    if ((await c.locator('.v').textContent()).trim() !== '0') continue;
+    if ((await c.evaluate(e => e.tagName)) === 'BUTTON') zeroPressable++;
+  }
+  eq('a count of zero is not offered as a button', zeroPressable, 0);
+
+  eq('no rule with a floor is counted as run out',
+     (await page.evaluate(() => {
+       const t = window.__ts;
+       return t.RULES.filter(r => r.floor)
+         .filter(r => { const p = t.place(r); return p && t.inTally(r, p, 'lost'); })
+         .map(r => r.id).join(',');
+     })), '');
+
+  // Forty drags used to turn a typed $120,000 into $118,286.
+  const mixAfterDrag = await page.evaluate(() => {
+    const t = window.__ts;
+    t.S.mix = { wage: 120000, bonus: 20000, rsu: 0, int: 0, qdiv: 0, ltg: 0, stg: 0, exempt: 0 };
+    t.S.income = 140000;
+    t.render();
+    const el = document.getElementById('income');
+    const drag = v => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); };
+    for (let v = 140000; v <= 180000; v += 1000) drag(v);
+    for (let v = 180000; v >= 140000; v -= 1000) drag(v);
+    return t.S.mix;
+  });
+  eq('the pay you typed survives forty drags of the slider', mixAfterDrag.wage, 120000);
+  eq('the bonus you typed survives forty drags of the slider', mixAfterDrag.bonus, 20000);
+
+  const hiddenNote = (await page.locator('#hiddenNote').textContent()).trim();
+  ok('the page says why rows are missing', /rule/.test(hiddenNote), hiddenNote.slice(0, 60), 'a reason');
+
+  const offBefore = await page.locator('.row.off').count();
+  if (offBefore > 0) {
+    await page.locator('#hiddenNote button', { hasText: 'Show more income' }).click();
+    ok('the note reveals the rows past the right edge',
+       (await page.locator('.row.off').count()) < offBefore,
+       await page.locator('.row.off').count(), `< ${offBefore}`);
+  }
+
+  ok('the figures panel separates a deduction from a ceiling',
+     (await page.locator('.limgroup').count()) >= 2,
+     await page.locator('.limgroup').count(), '>= 2');
+
+  const cliffId = await page.evaluate(() => {
+    const t = window.__ts;
+    const r = t.RULES.find(x => x.shape === 'cliff' && t.applies(x) && t.place(x));
+    return r ? r.id : '';
+  });
+  if (cliffId) {
+    await page.locator(`.row[data-id="${cliffId}"]`).click();
+    const where = await page.locator('.detail .where').textContent();
+    ok('a cliff is never described as having a top', !/top of this band/.test(where),
+       where.slice(0, 70), 'no band on a cliff');
+    await page.locator(`.row[data-id="${cliffId}"]`).click();
+  }
+
+  await page.locator('#restart').click();
+  eq('the opening questions can be reopened', await page.locator('#scrim').isHidden(), false);
+  await page.locator('#mGo').click();
 
   eq('no console errors', consoleErrors.join(' | '), '');
 

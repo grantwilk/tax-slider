@@ -163,6 +163,7 @@ h1,h2,h3{margin:0}
   font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);
 }
+.field .sub{font-size:11.5px;color:var(--faint);line-height:1.35;margin-top:2px}
 .field input,.field select{
   font:inherit;font-size:15px;background:var(--inset);color:var(--ink);
   border:1px solid var(--grid-strong);border-radius:6px;padding:6px 9px;
@@ -211,7 +212,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
   gap:1px;background:var(--grid-strong);border:1px solid var(--grid-strong);
   border-radius:10px;overflow:hidden;margin:16px 0;
 }
-.stat{background:var(--panel);padding:11px 13px}
+.stat{background:var(--panel);padding:11px 13px;text-align:left;border:0;width:100%;display:block}
+button.stat.pick{cursor:pointer}
+button.stat.pick:hover{background:var(--row-hot)}
+button.stat.pick[aria-pressed="true"]{background:var(--ink)}
+button.stat.pick[aria-pressed="true"] .k,
+button.stat.pick[aria-pressed="true"] .v,
+button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .stat .k{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .stat .v{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin-top:2px}
 .stat .n{font-size:12px;color:var(--faint);margin-top:1px}
@@ -224,6 +231,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
   font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin-bottom:8px;
 }
+.limgroup{
+  font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);margin:9px 0 3px;
+}
+.limgroup:first-child{margin-top:0}
+.lim.on{background:var(--row-tint);box-shadow:inset 3px 0 0 var(--mark)}
+.lim.on .lt{font-weight:700}
 .limgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px}
 .lim{
   display:flex;justify-content:space-between;gap:8px;align-items:baseline;
@@ -246,6 +260,16 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 .filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* ============================ chart ============================ */
+.legend{
+  display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;
+  padding:7px 2px 9px;font-size:11.5px;color:var(--muted);
+}
+.legend .lk{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.legend .sw{width:26px;height:11px;border-radius:2px;background:var(--sec-rates);display:inline-block}
+.legend .sw.phaseout{-webkit-mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15));mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15))}
+.legend .sw.step{-webkit-mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px);mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px)}
+.legend .sw.cliff{background:transparent;border-left:4px solid var(--sec-rates);background-image:repeating-linear-gradient(135deg,var(--sec-rates) 0 2px,transparent 2px 6px)}
+.legend .sw.here{background:transparent;border-left:3px solid var(--mark);width:12px}
 .chartwrap{
   border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
   overflow:hidden;
@@ -273,6 +297,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
   background:transparent;text-align:left;border-bottom:1px solid var(--grid);
 }
 .row:hover{background:var(--row-hot)}
+.row.here .lab{box-shadow:inset 3px 0 0 var(--mark)}
+.row.here .lab .txt{font-weight:700}
+.row.here .bar{outline:1.5px solid var(--mark);outline-offset:1px}
 .row[aria-pressed="true"]{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
 .row .lab{
   width:var(--label-w);flex:0 0 var(--label-w);padding:0 9px 0 10px;
@@ -334,6 +361,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 .empty{padding:22px 14px;color:var(--faint);font-size:13.5px}
 
 /* ============================ detail ============================ */
+.hidden-note{
+  font-size:12.5px;color:var(--faint);margin:9px 2px 0;max-width:78ch;
+}
+.hidden-note button{
+  border:0;background:transparent;color:var(--ink);padding:0;
+  text-decoration:underline;font-size:12.5px;
+}
 .detail{
   border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
   padding:16px 18px;margin-top:16px;min-height:132px;
@@ -367,6 +401,10 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 /* ============================ footer ============================ */
 .foot{margin-top:26px;border-top:1px solid var(--grid-strong);padding-top:14px}
 .foot p{font-size:12.5px;color:var(--muted);margin:0 0 8px;max-width:none}
+.link{
+  border:0;background:transparent;padding:0;color:var(--ink);
+  font-size:12.5px;text-decoration:underline;cursor:pointer;
+}
 .foot .disc{color:var(--faint);font-size:12px;line-height:1.5}
 
 /* ============================ first run ============================ */
@@ -398,7 +436,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
   body{padding:0 11px 52px}
   .row .lab{padding:0 5px 0 7px;gap:4px}
   .row .lab .txt{font-size:11px}
-  .bar .btxt{display:none}
+  .bar .btxt{font-size:9.5px;padding:0 4px;letter-spacing:0}
   .field input[type=number],.field.wide input{width:100%}
   .field{flex:1 1 132px}
   .crow{gap:10px 12px}
@@ -446,7 +484,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
       <input id="children" type="number" min="0" max="12" step="1" value="0">
     </div>
     <div class="field">
-      <label for="axis">Axis top</label>
+      <label for="axis">Show income up to</label>
       <select id="axis">
         <option value="250000">$250,000</option>
         <option value="500000">$500,000</option>
@@ -470,7 +508,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
     <div class="crow">
       <div class="field"><label for="mWage">Pay, before deductions</label><input id="mWage" type="number" min="0" step="1000" value="120000"></div>
       <div class="field"><label for="mBonus">Bonus</label><input id="mBonus" type="number" min="0" step="1000" value="0"></div>
-      <div class="field"><label for="mRsu">Vesting stock</label><input id="mRsu" type="number" min="0" step="1000" value="0"></div>
+      <div class="field"><label for="mRsu">Vesting stock (RSUs)</label><input id="mRsu" type="number" min="0" step="1000" value="0"></div>
       <div class="field"><label for="mInt">Interest</label><input id="mInt" type="number" min="0" step="500" value="0"></div>
       <div class="field"><label for="mQdiv">Qualified dividends</label><input id="mQdiv" type="number" min="0" step="500" value="0"></div>
       <div class="field"><label for="mLtg">Long-term gain</label><input id="mLtg" type="number" min="0" step="1000" value="0"></div>
@@ -507,6 +545,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
         <label><input type="checkbox" id="oOwn"> I buy my own health plan</label>
       </div>
     </div>
+    <p class="hint">A 2025 law created new deductions for tips, for overtime,
+      and for interest on a loan for a new car. Each one has its own income
+      range. Enter an amount and its rule appears on the chart.</p>
   </details>
 </section>
 
@@ -514,19 +555,32 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 
 <section class="limits">
   <h2 id="limitsHead">Your figures</h2>
-  <div class="limgrid" id="limits"></div>
+  <div id="limits"></div>
 </section>
 
 <nav class="filters" id="filters" aria-label="Sections"></nav>
+
+<div class="legend" id="legend">
+  <span class="lk"><i class="sw band"></i>Fixed range</span>
+  <span class="lk"><i class="sw phaseout"></i>Gets smaller</span>
+  <span class="lk"><i class="sw step"></i>Drops in steps</span>
+  <span class="lk"><i class="sw cliff"></i>Hard edge</span>
+  <span class="lk"><i class="sw here"></i>Applies to you now</span>
+</div>
 
 <div class="chartwrap">
   <div class="ruler"><div class="pad"></div><div class="ticks" id="ticks"></div></div>
   <div class="track" id="track"></div>
 </div>
 
+<p class="hidden-note" id="hiddenNote"></p>
+
 <section class="detail" id="detail" aria-live="polite"></section>
 
 <footer class="foot">
+  <p><button type="button" id="restart" class="link">Start over</button>
+    to answer the three opening questions again. Your figures stay in this
+    browser, and the page sends them nowhere.</p>
   <p>Every figure is for tax year 2026 and for federal tax only. State and local
     tax is not shown. The page shows where the edges are. It does not
     calculate what you owe.</p>
@@ -540,7 +594,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 <div class="scrim" id="scrim" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <h2 id="mTitle">Start here</h2>
-    <p>Give three answers. Then the chart appears. You can change any answer later.</p>
+    <p>Give three answers. Then the chart appears. You can change any answer
+      later. Your figures stay in this browser, and the page sends them
+      nowhere.</p>
     <div class="field">
       <label for="mStatus">Filing status</label>
       <select id="mStatus">
@@ -557,6 +613,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
     <div class="field">
       <label for="mIncome">Total income for 2026</label>
       <input id="mIncome" type="number" min="0" step="1000" value="120000">
+      <span class="sub">Your pay before anything is taken out. Not the wages
+        box on your W-2.</span>
     </div>
     <button class="go" type="button" id="mGo">Show my chart</button>
   </div>
@@ -661,9 +719,10 @@ const RULES = [
   {id:"salt_phasedown", sec:"deductions", t:"SALT cap phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[505000,606333],mfj:[505000,606333],mfs:[252500,303167],hoh:[505000,606333]},
    st:"SALT cap",
+   floor:true,
    d:"SALT means state and local tax. The cap on that deduction is $40,400 for 2026, far more than the old $10,000. After the start the cap falls by 30 cents for each dollar of income. The floor is $10,000.",
    s:[["IRC 164","https://www.law.cornell.edu/uscode/text/26/164"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
-  {id:"qbi_phasein", sec:"deductions", t:"QBI limits phase in", m:"taxable", shape:"phaseout", o:50,
+  {id:"qbi_phasein", sec:"deductions", t:"QBI deduction limits", m:"taxable", shape:"phaseout", o:50,
    e:{single:[201750,276750],mfj:[403500,553500],mfs:[201775,276775],hoh:[201750,276750]},
    st:"QBI limits",
    d:"QBI means qualified business income. Under the start, the 20 percent deduction on that income has no wage test and no restriction on the type of work. Across this range a limit based on the wages the business pays takes effect. For professional service work the deduction disappears completely.",
@@ -721,6 +780,7 @@ const RULES = [
   {id:"cdcc_rate", sec:"credits", t:"Care credit rate falls", m:"agi", shape:"step", o:50,
    e:{single:[15000,75000],mfj:[15000,150000],mfs:[15000,75000],hoh:[15000,75000]},
    st:"Care credit rate",
+   floor:true,
    d:"The credit for child or adult care starts at 50 percent of what you spend. It drops one point for each $2,000 of income more than $15,000. It stops at 35 percent. It then falls again after the top of this band, and stops at 20 percent. It never reaches zero.",
    s:[["IRS Pub 503","https://www.irs.gov/publications/p503"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"ss_earnings_test", sec:"health", t:"Social Security earnings test", m:"wages", shape:"open", o:50,
@@ -780,46 +840,48 @@ const RULES = [
    s:[["IRS: estimated taxes","https://www.irs.gov/faqs/estimated-tax"]]},
 ];
 
+const NEEDS_REASON = {"carloan":"car loan interest","children":"a child under 17","overtime":"overtime pay","ownplan":"your own health plan","ssben":"a Social Security benefit","supp":"a bonus or vesting stock","tips":"tip income"};
+
 /* Driven by age, not by income, so these are not bars. */
 const LIMITS = [
-  {id:"stdded", t:"Standard deduction", base:{single:16100,mfj:32200,mfs:16100,hoh:24150}, catch:{},
+  {id:"stdded", t:"Standard deduction", base:{single:16100,mfj:32200,mfs:16100,hoh:24150}, catch:{}, g:"take",
    d:"What you subtract before the brackets apply, if you do not itemize. A person aged 65 or over adds more, and a blind person adds the same amount again.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
-  {id:"aged", t:"Extra deduction at 65", base:{single:2050,mfj:1650,mfs:1650,hoh:2050}, catch:{},
+  {id:"aged", t:"Extra deduction at 65", base:{single:2050,mfj:1650,mfs:1650,hoh:2050}, catch:{}, g:"take",
    ageMin:65,
    d:"On top of the standard deduction, and separate from the $6,000 senior deduction that the 2025 law added. A blind person adds the same amount a second time.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
-  {id:"deferral", t:"401(k) and 403(b) deferral", base:24500, catch:{50:8000,60:11250,64:8000},
+  {id:"deferral", t:"401(k) and 403(b) deferral", base:24500, catch:{50:8000,60:11250,64:8000}, g:"put",
    d:"The most you can contribute to a workplace plan from your own pay. Employer money does not count against this. The extra amount allowed at 50 rises again for the four years from 60 to 63, then drops back at 64.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
-  {id:"ira", t:"IRA contribution", base:7500, catch:{50:1100},
+  {id:"ira", t:"IRA contribution", base:7500, catch:{50:1100}, g:"put",
    d:"One limit across every traditional and Roth IRA you own. It is not a limit for each account. You need earned income at least equal to the amount you contribute.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
-  {id:"hsa_self", t:"HSA, self-only cover", base:4400, catch:{55:1000},
+  {id:"hsa_self", t:"HSA, self-only cover", base:4400, catch:{55:1000}, g:"put",
    needs:"hdhp",
    d:"Only available with a qualifying high-deductible plan. Employer money counts against this limit. Contributions can no longer be made once Medicare starts.",
    s:[["Rev. Proc. 2025-19","https://www.irs.gov/pub/irs-drop/rp-25-19.pdf"]]},
-  {id:"hsa_family", t:"HSA, family cover", base:8750, catch:{55:1000},
+  {id:"hsa_family", t:"HSA, family cover", base:8750, catch:{55:1000}, g:"put",
    needs:"hdhp",
    d:"Only available with a qualifying high-deductible plan. The extra at 55 is per person, so two spouses need two accounts to claim it twice.",
    s:[["Rev. Proc. 2025-19","https://www.irs.gov/pub/irs-drop/rp-25-19.pdf"]]},
-  {id:"fsa", t:"Health FSA", base:3400, catch:{},
+  {id:"fsa", t:"Health FSA", base:3400, catch:{}, g:"put",
    d:"Money set aside for medical costs, from your pay before tax. If you have a general-purpose FSA, you cannot contribute to an HSA.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
-  {id:"dcfsa", t:"Dependent care FSA", base:7500, catch:{},
+  {id:"dcfsa", t:"Dependent care FSA", base:7500, catch:{}, g:"put",
    d:"Raised from $5,000 for 2026, the first change since 1986. It is a household limit, not a per-person one.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
-  {id:"additions", t:"Total 401(k) additions", base:72000, catch:{},
+  {id:"additions", t:"Total 401(k) additions", base:72000, catch:{}, g:"put",
    d:"Everything that can land in the plan for you in one year: your own contribution, the employer match, and after-tax money. Catch-up sits outside this. The gap between this limit and your own contribution is the room for a large after-tax contribution. Some plans let that money move to a Roth account later.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
-  {id:"simple", t:"SIMPLE IRA deferral", base:17000, catch:{50:4000},
+  {id:"simple", t:"SIMPLE IRA deferral", base:17000, catch:{50:4000}, g:"put",
    d:"A smaller workplace plan, common at small employers. A plan for an employer with 25 or fewer people can use a higher limit of $18,100.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
-  {id:"qcd", t:"Charity gift from an IRA", base:111000, catch:{},
+  {id:"qcd", t:"Charity gift from an IRA", base:111000, catch:{}, g:"give",
    ageMin:70,
    d:"From age 70 and a half you can send money straight from an IRA to a charity. The gift is not part of your income, so it does not raise any income measure on this page. It also counts toward the minimum amount you must take from the IRA each year.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
-  {id:"gift", t:"Gift to one person, tax free", base:19000, catch:{},
+  {id:"gift", t:"Gift to one person, tax free", base:19000, catch:{}, g:"give",
    d:"You can give this much to any one person in the year with no gift tax return. It does not reduce the lifetime amount you can give before gift tax applies. A married couple can give twice this to the same person.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
 ];
@@ -849,7 +911,7 @@ const S = {
   mix:{ wage:120000, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 },
   adj:{ k401:0, hsa:0, iso:0 },
   oth:{ tips:0, ot:0, car:0, ss:0, hdhp:false, own:false },
-  off:{}, picked:null,
+  off:{}, picked:null, only:null,
 };
 
 function save(){ try{ localStorage.setItem('ts.state', JSON.stringify(S)); }catch(e){} }
@@ -995,6 +1057,17 @@ function place(rule){
   return { lo: a < 100 ? 0 : a, hi:b, rawLo:lo, rawHi:hi };
 }
 
+/* Which of the three summary counts, if any, a rule contributes to. Chart and
+   summary read the same function, so a count can never point at nothing. */
+function inTally(rule, pos, tally){
+  const s = standing(pos, rule.shape);
+  if (rule.shape === 'cliff') return tally === 'cliffs' && s === 'above';
+  if (rule.shape === 'band' || rule.shape === 'open') return false;
+  if (tally === 'inside') return s === 'inside';
+  if (tally === 'lost') return s === 'above' && !rule.floor;
+  return false;
+}
+
 /* Where the reader sits relative to a rule. */
 function standing(pos, shape){
   const t = S.income;
@@ -1025,11 +1098,11 @@ function renderTicks(){
     const d = document.createElement('div');
     d.className = 'tick' + (v % (step * 2) === 0 ? ' major' : '');
     d.style.left = xOf(v) + '%';
-    if (v < S.axis){
-      const s = document.createElement('span');
-      s.textContent = v === 0 ? '$0' : fmtShort(v);
-      d.appendChild(s);
-    }
+    const s = document.createElement('span');
+    s.textContent = v === 0 ? '$0' : fmtShort(v);
+    /* The final label would hang off the right, so it sits inside the tick. */
+    if (v === S.axis){ s.style.left = 'auto'; s.style.right = '4px'; }
+    d.appendChild(s);
     el.appendChild(d);
   }
 }
@@ -1051,7 +1124,9 @@ function renderChart(){
     const placed = [];
     for (const r of rules){
       const p = place(r);
-      if (p) placed.push({ r:r, p:p });
+      if (!p) continue;
+      if (S.only && !inTally(r, p, S.only)) continue;
+      placed.push({ r:r, p:p });
     }
     if (!placed.length) continue;
     placed.sort((a, b) => (a.r.o - b.r.o) || (a.p.lo - b.p.lo));
@@ -1071,7 +1146,10 @@ function renderChart(){
 
       const row = document.createElement('button');
       row.type = 'button';
-      row.className = 'row' + (offscale ? ' off' : '');
+      const where = standing(p, r.shape);
+      const isHere = where === 'inside' ||
+                     (r.shape === 'cliff' && where === 'above');
+      row.className = 'row' + (offscale ? ' off' : '') + (isHere ? ' here' : '');
       row.style.color = 'var(--sec-' + sec + ')';
       row.setAttribute('aria-pressed', S.picked === r.id ? 'true' : 'false');
       row.dataset.id = r.id;
@@ -1130,6 +1208,7 @@ function renderChart(){
     e.textContent = 'There is nothing to show. Turn a section on again.';
     track.appendChild(e);
   }
+  renderHidden(hiddenOff);
 
   /* A caption that does not fit is worse than no caption, so measure once the
      bars are laid out and drop the ones that would be clipped. */
@@ -1142,6 +1221,73 @@ function renderChart(){
   mark.className = 'mark';
   mark.style.left = 'calc(var(--label-w) + (100% - var(--label-w)) * ' + (xOf(S.income) / 100) + ')';
   track.appendChild(mark);
+}
+
+/* A reader cannot tell the difference between "this does not apply to you",
+   "you have not told me enough yet", and "this is off the right of the chart".
+   The page knows which is which for every row, so it should say. */
+function renderHidden(offscale){
+  const el = $('hiddenNote');
+  if (S.only){
+    const label = { inside:'get smaller as you earn more',
+                    lost:'have run out at your income',
+                    cliffs:'are hard edges behind you' }[S.only];
+    el.textContent = 'The chart shows only the rules that ' + label + '. ';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'Show all rules';
+    b.addEventListener('click', () => { S.only = null; bump(); });
+    el.appendChild(b);
+    return;
+  }
+  const parts = [];
+  const wanted = {};
+  let ageHidden = 0, statusHidden = 0;
+
+  for (const r of RULES){
+    if (S.off[r.sec] || applies(r)) continue;
+    const e = r.e[S.status];
+    if (!e || (e[0] === null && e[1] === null)){ statusHidden++; continue; }
+    if (r.ageMin && S.age < r.ageMin){ ageHidden++; continue; }
+    if (r.ageMax && S.age > r.ageMax){ ageHidden++; continue; }
+    if (r.needs && NEEDS_REASON[r.needs]) wanted[r.needs] = (wanted[r.needs] || 0) + 1;
+  }
+
+  /* Kept to short sentences. One list of seven runs past the length that
+     stays readable for someone reading English as a second language. */
+  const asks = Object.keys(wanted).map(k => NEEDS_REASON[k]);
+  let lead = 'More rules appear if you add ';
+  while (asks.length){
+    const chunk = asks.splice(0, 3);
+    const last = chunk.pop();
+    parts.push(lead + (chunk.length ? chunk.join(', ') + ', or ' : '') + last + '.');
+    lead = 'Others appear if you add ';
+  }
+  if (ageHidden) parts.push(ageHidden + (ageHidden === 1 ? ' rule is' : ' rules are') +
+                            ' hidden because of your age.');
+  if (statusHidden) parts.push(statusHidden +
+                    (statusHidden === 1 ? ' rule does' : ' rules do') +
+                    ' not exist for your filing status.');
+  if (offscale){
+    parts.push(offscale + (offscale === 1 ? ' rule starts' : ' rules start') +
+               ' past the right edge of the chart.');
+  }
+
+  el.textContent = '';
+  if (!parts.length) return;
+  el.append(parts.join(' ') + ' ');
+  if (offscale && S.axis < 1500000){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'Show more income';
+    b.addEventListener('click', () => {
+      S.axis = S.axis < 500000 ? 500000 : S.axis < 1000000 ? 1000000 : 1500000;
+      $('axis').value = String(S.axis);
+      $('income').max = String(S.axis);
+      bump();
+    });
+    el.appendChild(b);
+  }
 }
 
 function renderMarkerCap(){
@@ -1174,25 +1320,36 @@ function renderSummary(){
     if (!applies(r)) continue;
     const p = place(r);
     if (!p) continue;
-    const s = standing(p, r.shape);
-    if (r.shape === 'cliff'){ if (s === 'above') cliffs++; continue; }
-    if (r.shape === 'band' || r.shape === 'open') continue;
-    if (s === 'inside') inside++;
-    else if (s === 'above') lost++;
+    if (inTally(r, p, 'inside')) inside++;
+    if (inTally(r, p, 'lost')) lost++;
+    if (inTally(r, p, 'cliffs')) cliffs++;
   }
 
   const cells = [
     ['Marginal rate', nothingTaxed ? '0%' : (band ? band[2] + '%' : '\u2014'),
      nothingTaxed ? 'your deduction covers it all' : 'on your next dollar of pay'],
-    ['Long-term gain', nothingTaxed ? '0%' : ltRate, 'on your next dollar of gain'],
-    ['Taxable income', fmt(M.taxable), 'after a ' + fmt(M.deduction) + ' deduction'],
-    ['Phasing out', String(inside), inside === 1 ? 'benefit shrinks as you earn more' : 'benefits shrink as you earn more'],
-    ['Already gone', String(lost), lost === 1 ? 'benefit is now zero' : 'benefits are now zero'],
-    ['Cliffs passed', String(cliffs), cliffs === 1 ? 'hard edge is behind you' : 'hard edges are behind you'],
+    ['Long-term gain', nothingTaxed ? '0%' : ltRate,
+     'on a gain, if you had one'],
+    ['Taxable income', fmt(M.taxable),
+     'after the ' + fmt(M.deduction) + ' standard deduction'],
+    ['Shrinking now', String(inside),
+     (inside === 1 ? 'benefit gets' : 'benefits get') + ' smaller as you earn more',
+     'inside'],
+    ['Now zero', String(lost),
+     (lost === 1 ? 'benefit has' : 'benefits have') + ' run out at your income',
+     'lost'],
+    ['Cliffs passed', String(cliffs),
+     (cliffs === 1 ? 'hard edge is' : 'hard edges are') + ' behind you', 'cliffs'],
   ];
-  $('summary').innerHTML = cells.map(c =>
-    '<div class="stat"><div class="k">' + c[0] + '</div><div class="v">' + c[1] +
-    '</div><div class="n">' + c[2] + '</div></div>').join('');
+  $('summary').innerHTML = cells.map(c => {
+    const live = c[3] && c[1] !== '0';
+    const tag = live ? 'button' : 'div';
+    const attr = live ? ' type="button" data-only="' + c[3] + '"' +
+                        (S.only === c[3] ? ' aria-pressed="true"' : '') : '';
+    return '<' + tag + ' class="stat' + (live ? ' pick' : '') + '"' + attr +
+           '><div class="k">' + c[0] + '</div><div class="v">' + c[1] +
+           '</div><div class="n">' + c[2] + '</div></' + tag + '>';
+  }).join('');
 }
 
 function limitFor(l){
@@ -1205,25 +1362,47 @@ function limitFor(l){
   return { total: base + extra, extra: extra, base: base };
 }
 
+const LIMIT_GROUP = {
+  take: 'Subtracted from your income',
+  put:  'The most you can contribute',
+  give: 'The most you can give away',
+};
+
 function renderLimits(){
   const box = $('limits');
   box.textContent = '';
-  for (const l of LIMITS){
-    if (l.needs === 'hdhp' && !S.oth.hdhp) continue;
-    if (l.ageMin && S.age < l.ageMin) continue;
-    const r = limitFor(l);
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'lim';
-    b.dataset.limit = l.id;
-    b.innerHTML = '<span class="lt"></span><span class="lv"></span>';
-    b.querySelector('.lt').textContent = l.t;
-    b.querySelector('.lv').innerHTML = fmt(r.total) +
-      (r.extra ? ' <small>incl. ' + fmt(r.extra) + '</small>' : '');
-    box.appendChild(b);
+  let any = false;
+
+  /* A deduction and a contribution ceiling are different kinds of number.
+     Shown side by side in one list, a $16,100 deduction reads as an amount
+     you are allowed to pay in. */
+  for (const g of ['take', 'put', 'give']){
+    const rows = LIMITS.filter(l => l.g === g &&
+      !(l.needs === 'hdhp' && !S.oth.hdhp) && !(l.ageMin && S.age < l.ageMin));
+    if (!rows.length) continue;
+    any = true;
+    const h = document.createElement('div');
+    h.className = 'limgroup';
+    h.textContent = LIMIT_GROUP[g];
+    box.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'limgrid';
+    for (const l of rows){
+      const r = limitFor(l);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lim' + (S.picked === l.id ? ' on' : '');
+      b.dataset.limit = l.id;
+      b.innerHTML = '<span class="lt"></span><span class="lv"></span>';
+      b.querySelector('.lt').textContent = l.t;
+      b.querySelector('.lv').innerHTML = fmt(r.total) +
+        (r.extra ? ' <small>incl. ' + fmt(r.extra) + '</small>' : '');
+      grid.appendChild(b);
+    }
+    box.appendChild(grid);
   }
-  if (!box.children.length){
-    box.innerHTML = '<span class="lt" style="color:var(--faint)">' +
+  if (!any){
+    box.innerHTML = '<span style="color:var(--faint);font-size:13.5px">' +
       'There is nothing to show. Tick the high-deductible plan box for the HSA limits.</span>';
   }
 }
@@ -1247,6 +1426,7 @@ const WHERE = {
   below: ['Not yet', 'Your income is still less than this edge.'],
   inside: ['You are here', 'This applies to you right now.'],
   above: ['Past this', 'Your income is more than the top of this band.'],
+  passed: ['Past this', 'Your income is more than this edge.'],
 };
 
 function renderDetail(){
@@ -1264,15 +1444,15 @@ function renderDetail(){
   const lim = LIMITS.find(l => l.id === S.picked);
   if (lim){
     const r = limitFor(lim);
-    d.innerHTML = '<div class="kicker">Limit for age ' + S.age + '</div>' +
+    d.innerHTML = '<div class="kicker">Your limit at age ' + S.age + '</div>' +
       '<h3>' + esc(lim.t) + '</h3>' +
       '<div class="where">' + fmt(r.total) + ' for you this year</div>' +
       '<p>' + esc(lim.d) + '</p>' +
-      '<div class="numbers">' +
+      (r.extra ? '<div class="numbers">' +
         num('Base amount', fmt(r.base)) +
-        (r.extra ? num('Extra for your age', fmt(r.extra)) : '') +
+        num('Extra for your age', fmt(r.extra)) +
         num('Your total', fmt(r.total)) +
-      '</div>' + srcHtml(lim.s);
+      '</div>' : '') + srcHtml(lim.s);
     return;
   }
   const rule = RULES.find(r => r.id === S.picked);
@@ -1284,7 +1464,9 @@ function renderDetail(){
       'your situation, so it has no edge to show.</p>' + srcHtml(rule.s);
     return;
   }
-  const s = standing(p, rule.shape);
+  let s = standing(p, rule.shape);
+  /* A cliff is one edge, not a range, so it has no top to be past. */
+  if (rule.shape === 'cliff' && s === 'above') s = 'passed';
   /* A reader who does not know what MAGI is learns nothing from the words
      "modified AGI", and the panel says the measure name twice. Gloss it. */
   const MEASURE = {
@@ -1314,10 +1496,12 @@ function renderDetail(){
     '<div class="numbers">' +
       num('Measured on', measureName, measureGloss) +
       num('Your ' + measureName, fmt(M[rule.m])) +
-      num('Edge, on that measure', p.rawHi === null ? fmt(p.rawLo) + ' and up'
-          : fmt(p.rawLo) + ' to ' + fmt(p.rawHi)) +
-      num('Edge, on total income', p.hi === null ? fmt(p.lo) + ' and up'
-          : fmt(p.lo) + ' to ' + fmt(p.hi)) +
+      num('The figure in the law', p.rawHi === null ? fmt(p.rawLo) + ' and up'
+          : fmt(p.rawLo) + ' to ' + fmt(p.rawHi),
+          'what the document says, on ' + measureName) +
+      num('Where it falls for you', p.hi === null ? fmt(p.lo) + ' and up'
+          : fmt(p.lo) + ' to ' + fmt(p.hi),
+          'the same edge, as total income. This is what the chart draws.') +
     '</div>' + srcHtml(rule.s);
 }
 
@@ -1358,20 +1542,22 @@ function renderAll(){
 
 /* ============================== wiring ============================== */
 function readMix(){
-  S.mix.wage = +$('mWage').value || 0;
-  S.mix.bonus = +$('mBonus').value || 0;
-  S.mix.rsu = +$('mRsu').value || 0;
-  S.mix.int = +$('mInt').value || 0;
-  S.mix.qdiv = +$('mQdiv').value || 0;
-  S.mix.ltg = +$('mLtg').value || 0;
-  S.mix.stg = +$('mStg').value || 0;
-  S.mix.exempt = +$('mExempt').value || 0;
+  for (const id in MIX_IDS) S.mix[MIX_IDS[id]] = +$(id).value || 0;
 }
+const MIX_IDS = { mWage:'wage', mBonus:'bonus', mRsu:'rsu', mInt:'int',
+                  mQdiv:'qdiv', mLtg:'ltg', mStg:'stg', mExempt:'exempt' };
+
 function writeMix(){
-  $('mWage').value = S.mix.wage; $('mBonus').value = S.mix.bonus;
-  $('mRsu').value = S.mix.rsu; $('mInt').value = S.mix.int;
-  $('mQdiv').value = S.mix.qdiv; $('mLtg').value = S.mix.ltg;
-  $('mStg').value = S.mix.stg; $('mExempt').value = S.mix.exempt;
+  /* Show the mix scaled to where the slider is, derived from the reference
+     each time. Nothing is written back, so nothing drifts. */
+  const base = mixTotal();
+  const f = base > 0 ? S.income / base : 0;
+  for (const id in MIX_IDS){
+    const el = $(id);
+    if (document.activeElement === el) continue;   // never fight a typist
+    el.value = base > 0 ? Math.round(S.mix[MIX_IDS[id]] * f)
+                        : (id === 'mWage' ? S.income : 0);
+  }
 }
 function writeControls(){
   $('status').value = S.status; $('age').value = S.age;
@@ -1393,15 +1579,10 @@ function bump(){ save(); renderAll(); }
 
 $('income').addEventListener('input', e => {
   S.income = +e.target.value;
-  /* Keep the mix in step with the slider so the two never disagree. */
-  const base = mixTotal();
-  if (base > 0){
-    const f = S.income / base;
-    for (const k of ['wage','bonus','rsu','int','qdiv','ltg','stg','exempt'])
-      S.mix[k] = Math.round(S.mix[k] * f);
-  } else {
-    S.mix.wage = S.income;
-  }
+  /* The mix holds the SHAPE of the income and is never rewritten here. It used
+     to be rescaled on every drag, which rounded each figure a little further
+     from what the reader typed until $120,000 had become $118,286. The engine
+     scales the shape itself, so the fields only need to show the result. */
   writeMix();
   bump();
 });
@@ -1437,6 +1618,21 @@ $('oSs').addEventListener('input', e => { S.oth.ss = +e.target.value || 0; bump(
 $('oHdhp').addEventListener('change', e => { S.oth.hdhp = e.target.checked; bump(); });
 $('oOwn').addEventListener('change', e => { S.oth.own = e.target.checked; bump(); });
 
+$('restart').addEventListener('click', () => {
+  $('mStatus').value = S.status;
+  $('mIncome').value = String(S.income);
+  $('mAge').value = String(S.age);
+  $('scrim').hidden = false;
+  $('mIncome').focus();
+});
+$('summary').addEventListener('click', e => {
+  const b = e.target.closest('button[data-only]');
+  if (!b) return;
+  S.only = S.only === b.dataset.only ? null : b.dataset.only;
+  if (S.only) for (const sec of SEC) S.off[sec] = false;
+  bump();
+  $('legend').scrollIntoView({ block:'nearest', behavior:'smooth' });
+});
 $('filters').addEventListener('click', e => {
   const b = e.target.closest('button[data-sec]');
   if (!b) return;
@@ -1503,6 +1699,7 @@ renderAll();
 if (!returning) openModal();
 window.__ts = { S:S, measure:measure, solve:solve, place:place, applies:applies,
                 movingEnd:movingEnd, acaCliff:acaCliff, limitFor:limitFor,
+                inTally:inTally, standing:standing, bump:bump,
                 RULES:RULES, LIMITS:LIMITS, mixTotal:mixTotal,
                 render:function(){ writeControls(); renderAll(); } };
 /* Crossing the phone breakpoint changes which labels fit, so a resize has to
