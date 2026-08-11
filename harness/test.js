@@ -96,7 +96,11 @@ function base(over) {
   m = await ask(page, base({ mix: { wage: 100000, bonus: 0, rsu: 0, int: 0, qdiv: 0, ltg: 0, stg: 0, exempt: 20000 } }),
                 'return t.measure(120000)');
   near('tax-exempt interest is outside agi', m.agi, 100000, 1);
-  near('tax-exempt interest is inside magi', m.magi, 120000, 1);
+  // Only the Medicare surcharge and the ACA credit add tax-exempt interest
+  // back. The thirteen other rules that read MAGI start from AGI.
+  near('tax-exempt interest is outside plain magi', m.magi, 100000, 1);
+  near('tax-exempt interest is inside the Medicare measure', m.magiTei, 120000, 1);
+  near('tax-exempt interest is inside provisional income', m.provisional, 120000, 1);
 
   // Age 66, married filing jointly, $200,000 of pay.
   //   std      32,200 basic + 1,650 for age
@@ -148,13 +152,14 @@ function base(over) {
   // the excess passes $29,000, not $30,000. Check the step either side.
   e = await ask(page, base({ oth: { tips: 0, ot: 0, car: 6000, ss: 0, hdhp: false, own: false } }),
                 'return t.movingEnd(t.RULES.find(r=>r.id==="car_loan_deduction"), 100000)');
-  eq('car loan rounds up, so it dies a step early', e, 129000);
+  // Every moving edge reports the first dollar at which nothing is left.
+  eq('car loan rounds up, so it dies a step early', e, 129001);
 
   // Two children is $4,400 of credit. At $50 per $1,000 rounded up, the last
   // $50 goes at an excess of $87,001, so the edge sits at $287,000.
   e = await ask(page, base({ top: { status: 'single', age: 35, children: 2, income: 120000 } }),
                 'return t.movingEnd(t.RULES.find(r=>r.id==="ctc_phaseout"), 200000)');
-  eq('child credit edge for two children', e, 287000);
+  eq('child credit edge for two children', e, 287001);
 
   // Preferred income stacks on top of ordinary income, so a portfolio of pure
   // long-term gain leaves the next dollar of PAY in the bottom bracket even
@@ -566,6 +571,92 @@ function base(over) {
   await page.locator('#restart').click();
   eq('the opening questions can be reopened', await page.locator('#scrim').isHidden(), false);
   await page.locator('#mGo').click();
+
+
+  // --------------------------------------------------------------------
+  // Ten defects the figure audit found. Each one moved a real edge.
+  // --------------------------------------------------------------------
+  const auditState = o => Object.assign({
+    top: { status: 'single', age: 35, children: 0, income: 200000 },
+  }, wages(200000), zeroAdj, zeroOth, o);
+
+  // 1. The add-back moved thirteen bars by the whole muni balance.
+  eq('tax-exempt interest does not move the child credit',
+     Math.round(await ask(page, auditState({
+       top: { status: 'single', age: 35, children: 1, income: 250000 },
+       mix: { wage: 200000, bonus: 0, rsu: 0, int: 0, qdiv: 0, ltg: 0, stg: 0, exempt: 50000 },
+     }), "return t.place(t.RULES.find(x => x.id === 'ctc_phaseout')).lo;")), 250000);
+
+  // 2. The page drew the tips bar and left tips out of taxable income.
+  const b24Plain = await ask(page, auditState({ top: { status: 'single', age: 35, children: 0, income: 180000 } }),
+    "return t.place(t.RULES.find(x => x.id === 'bracket_24')).lo;");
+  const b24Tips = await ask(page, auditState({
+    top: { status: 'single', age: 35, children: 0, income: 180000 },
+    oth: { tips: 25000, ot: 0, car: 0, ss: 0, hdhp: false, own: false },
+  }), "return t.place(t.RULES.find(x => x.id === 'bracket_24')).lo;");
+  near('a tips deduction moves the 24% bracket by its full amount',
+       Math.round(b24Tips - b24Plain), 25000, 1);
+
+  // 3. A separate return has three Medicare steps, not five.
+  eq('the Medicare tiers for a separate return',
+     (await ask(page, auditState({ top: { status: 'mfs', age: 66, children: 0, income: 200000 } }),
+       "return [1,2,3,4,5].map(i => { const r = t.RULES.find(x => x.id === 'irmaa_' + i);"
+       + " return t.applies(r) ? Math.round(t.place(r).rawLo) : null; }).join(',');")),
+     ',,,109000,391000');
+
+  // 4. The care credit falls in two stages with a plateau between them.
+  eq('the first care credit fall stops at the 35% floor',
+     Math.round(await ask(page, auditState(), "return t.place(t.RULES.find(x => x.id === 'cdcc_rate')).rawHi;")),
+     43001);
+  eq('the second care credit fall is drawn on a joint return',
+     (await ask(page, auditState({ top: { status: 'mfj', age: 40, children: 1, income: 200000 } }),
+       "const p = t.place(t.RULES.find(x => x.id === 'cdcc_rate_2'));"
+       + " return Math.round(p.rawLo) + '-' + Math.round(p.rawHi);")),
+     '150000-206001');
+
+  // 5. The harshest version of the benefit rule was the one never shown.
+  eq('a separate return sees the Social Security rule with no threshold',
+     await ask(page, auditState({
+       top: { status: 'mfs', age: 66, children: 0, income: 60000 },
+       oth: { tips: 0, ot: 0, car: 0, ss: 20000, hdhp: false, own: false },
+     }), "return t.applies(t.RULES.find(x => x.id === 'ss_benefit_tax_mfs'));"), true);
+
+  // 6. Half the dependent care exclusion on a separate return.
+  eq('the dependent care limit halves on a separate return',
+     await ask(page, auditState({ top: { status: 'mfs', age: 35, children: 1, income: 90000 } }),
+       "return t.limitFor(t.LIMITS.find(l => l.id === 'dcfsa')).total;"), 3750);
+
+  // 9. Both kinds of moving edge now report the first dollar at which
+  //    nothing is left, so two bars can be read the same way.
+  eq('every moving edge reports the first dollar at zero',
+     await ask(page, auditState({
+       top: { status: 'single', age: 35, children: 1, income: 200000 },
+       oth: { tips: 25000, ot: 0, car: 10000, ss: 0, hdhp: false, own: false },
+     }), `
+       const gone = id => { const r = t.RULES.find(x => x.id === id);
+         const e = t.movingEnd(r, t.place(r).rawLo); return e; };
+       const left = (id, magi) => { void id; void magi; return 0; };
+       void left;
+       return [gone('tips_deduction'), gone('car_loan_deduction'), gone('ctc_phaseout')].join(',');
+     `), '400000,149001,243001');
+
+  // 10. A catch-up rule cannot reach anyone under fifty.
+  eq('the Roth catch-up rule is hidden before fifty',
+     await ask(page, auditState({ top: { status: 'single', age: 30, children: 0, income: 200000 } }),
+       "return t.applies(t.RULES.find(x => x.id === 'roth_catch_up'));"), false);
+  eq('the Roth catch-up rule appears at fifty-five',
+     await ask(page, auditState({ top: { status: 'single', age: 55, children: 0, income: 200000 } }),
+       "return t.applies(t.RULES.find(x => x.id === 'roth_catch_up'));"), true);
+
+  // The figures the audit found absent.
+  eq('the figures the audit found absent are present',
+     await ask(page, auditState(), `
+       const want = ['comp_limit', 'amt_rate_step'];
+       const lim = ['iso_100k', 'espp_25k', 'cap_loss', 'home_sale'];
+       const missing = want.filter(id => !t.RULES.some(r => r.id === id))
+         .concat(lim.filter(id => !t.LIMITS.some(l => l.id === id)));
+       return missing.join(',');
+     `), '');
 
   eq('no console errors', consoleErrors.join(' | '), '');
 

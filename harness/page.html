@@ -676,6 +676,23 @@ function mixTotal(){
   return m.wage + m.bonus + m.rsu + m.int + m.qdiv + m.ltg + m.stg + m.exempt;
 }
 
+/* Tips, overtime, and interest on a loan for a new car. Each is a deduction
+   from taxable income that falls away as MAGI rises, at $100 or $200 for every
+   whole $1,000 of excess. Draft Schedule 1-A sets the rounding. */
+function obbbaDeduction(magi){
+  const o = S.oth, mfj = S.status === 'mfj';
+  const start = mfj ? 300000 : 150000;
+  const carStart = mfj ? 200000 : 100000;
+  /* Tips and overtime count only whole thousands of excess. */
+  const whole = Math.max(0, Math.floor(Math.max(0, magi - start) / 1000));
+  /* The car loan deduction counts a part thousand as a whole one. */
+  const part = Math.max(0, Math.ceil(Math.max(0, magi - carStart) / 1000));
+  const tips = Math.max(0, Math.min(o.tips, 25000) - 100 * whole);
+  const ot   = Math.max(0, Math.min(o.ot, mfj ? 25000 : 12500) - 100 * whole);
+  const car  = Math.max(0, Math.min(o.car, 10000) - 200 * part);
+  return tips + ot + car;
+}
+
 /* All the measures at one point on the axis. */
 function measure(total){
   const m = S.mix, a = S.adj;
@@ -689,11 +706,13 @@ function measure(total){
      from pay escapes both. That difference is why these are separate. */
   const k401 = Math.min(a.k401, wage);
   const hsa  = Math.min(a.hsa, Math.max(0, wage - k401));
-  /* Tax-exempt interest is inside the axis total but outside AGI, and most
-     MAGI definitions add it straight back. Keeping the two steps separate is
-     what makes a muni bond look different from a bank account here. */
+  /* Tax-exempt interest is inside the axis total but outside AGI. Only two
+     definitions add it back: the Medicare surcharge and the ACA credit. The
+     other thirteen rules that read MAGI start from AGI, so adding it back for
+     all of them moved every one of their edges by the whole muni balance. */
   const agi  = Math.max(0, total - exempt - k401 - hsa);
-  const magi = agi + exempt;
+  const magi = agi;
+  const magiTei = agi + exempt;
 
   let ded = STD[S.status];
   if (S.age >= 65) ded += STD_AGED[S.status];
@@ -701,6 +720,11 @@ function measure(total){
     const st = S.status === 'mfj' ? 150000 : 75000;
     ded += Math.max(0, 6000 - 0.06 * Math.max(0, magi - st));
   }
+
+  /* These three reduce taxable income and are open to a filer who does not
+     itemize. Each one shrinks as MAGI rises, and MAGI does not depend on
+     taxable income, so there is no circle here. */
+  ded += obbbaDeduction(magi);
 
   const preferred = base > 0 ? (m.qdiv + m.ltg) * f : 0;
   const taxable = Math.max(0, agi - ded);
@@ -715,7 +739,8 @@ function measure(total){
     amti: agi + a.iso,
     supplemental: supp,
     priorwages: wage,
-    provisional: magi + 0.5 * S.oth.ss,
+    magiTei: magiTei,
+    provisional: magiTei + 0.5 * S.oth.ss,
     deduction: ded,
   };
 }
@@ -743,12 +768,13 @@ function solve(name, target){
    on how much of the thing you have, not on a figure in the tables. */
 function movingEnd(rule, startMagi){
   const o = S.oth, mfj = S.status === 'mfj';
-  /* Tips and overtime round the excess DOWN to a whole $1,000, so the benefit
-     survives until the excess reaches a full step. The car loan deduction and
-     the child credit round UP, so they die one whole step earlier. Getting
-     this backwards moves an edge by $1,000, which is why they are separate. */
+  /* Tips and overtime count only whole $1,000 of excess, so the benefit lasts
+     until the excess reaches a full step. The car loan deduction and the child
+     credit count a part thousand as a whole one, so they end a step earlier.
+     Both helpers return the FIRST dollar at which nothing is left, so the two
+     kinds of bar can be read the same way. They used to differ by $1. */
   const downStep = (d, rate) => d <= 0 ? null : startMagi + 1000 * Math.ceil(d / rate);
-  const upStep   = (d, rate) => d <= 0 ? null : startMagi + 1000 * (Math.ceil(d / rate) - 1);
+  const upStep   = (d, rate) => d <= 0 ? null : startMagi + 1000 * (Math.ceil(d / rate) - 1) + 1;
 
   if (rule.id === 'tips_deduction')     return downStep(Math.min(o.tips, 25000), 100);
   if (rule.id === 'overtime_deduction') return downStep(Math.min(o.ot, mfj ? 25000 : 12500), 100);
@@ -1211,6 +1237,7 @@ function renderDetail(){
     ordinary:['ordinary income', 'taxable income, less any long-term gain'],
     agi:['adjusted gross income', 'your income after a few adjustments, before the deduction'],
     magi:['modified AGI', 'adjusted gross income, with a few items added back'],
+    magiTei:['Medicare income', 'your AGI, plus tax-exempt interest. Only Medicare and the health credit read this one.'],
     wages:['wages', 'the pay that Social Security and Medicare tax applies to'],
     amti:['AMT income', 'the income the alternative minimum tax uses'],
     supplemental:['bonus and vesting pay', 'pay that is not your normal salary'],

@@ -27,6 +27,14 @@ import sys
 # ---------------------------------------------------------------- sources ---
 
 S = {
+ 'iso':     ('IRC 422(d)', 'https://www.law.cornell.edu/uscode/text/26/422'),
+ 'espp':    ('IRC 423(b)(8)', 'https://www.law.cornell.edu/uscode/text/26/423'),
+ 'caploss': ('IRC 1211(b)', 'https://www.law.cornell.edu/uscode/text/26/1211'),
+ 'sec121':  ('IRC 121', 'https://www.law.cornell.edu/uscode/text/26/121'),
+ 'iso':     ('IRC 422(d)', 'https://www.law.cornell.edu/uscode/text/26/422'),
+ 'espp':    ('IRC 423(b)(8)', 'https://www.law.cornell.edu/uscode/text/26/423'),
+ 'caploss': ('IRC 1211(b)', 'https://www.law.cornell.edu/uscode/text/26/1211'),
+ 'sec121':  ('IRC 121', 'https://www.law.cornell.edu/uscode/text/26/121'),
  'rp2532':   ('Rev. Proc. 2025-32', 'https://www.irs.gov/pub/irs-drop/rp-25-32.pdf'),
  'n2567':    ('Notice 2025-67',     'https://www.irs.gov/pub/irs-drop/n-25-67.pdf'),
  'rp2519':   ('Rev. Proc. 2025-19', 'https://www.irs.gov/pub/irs-drop/rp-25-19.pdf'),
@@ -142,7 +150,7 @@ rule(id='addl_medicare', section='rates', title='Additional Medicare Tax', order
     'is taxed. Your employer begins to take it from your pay at $200,000 from '
     'that employer. Your filing status does not change that point. A two- '
     'earner couple can therefore have too little taken, and can owe the tax '
-    'when they file.'),
+    'when they file. A qualifying surviving spouse uses the $200,000 figure here, not the joint figure.'),
      s=src('addmed'))
 
 rule(id='ss_wage_base', section='rates', title='Social Security wage base', order=20, measure='wages',
@@ -182,7 +190,7 @@ rule(id='roth_ira', section='accounts', title='Roth IRA phase-out', measure='mag
     'tax free later. After the start you can contribute less than the full '
     'amount. After the end you cannot contribute directly at all. Married '
     'filing separately runs from zero to $10,000. Almost nobody who files '
-    'that way can contribute.'),
+    'that way can contribute. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.'),
      s=src('n2567', 'rothira'))
 
 rule(id='trad_ira_deduction', section='accounts', title='IRA deduction phase-out',
@@ -190,10 +198,10 @@ rule(id='trad_ira_deduction', section='accounts', title='IRA deduction phase-out
      edges=by((81000, 91000), (129000, 149000), (0, 10000), (81000, 91000)),
      d=('This range applies when a workplace retirement plan covers you. After '
     'the end you can still contribute, but you cannot deduct it. If no plan '
-    'covers you, there is no income limit at all.'),
+    'covers you, there is no income limit at all. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.'),
      s=src('n2567', 'tradira'))
 
-rule(id='roth_catch_up', section='accounts', title='Roth catch-up required',
+rule(id='roth_catch_up', section='accounts', age_min=50, title='Roth catch-up required',
      measure='priorwages', shape='cliff', edges=flat((150000, None)),
      d=('New for 2026. Catch-up is the extra amount a person aged 50 or over can '
     'contribute. Roth means you pay the tax now, and the growth can be tax '
@@ -210,7 +218,11 @@ rule(id='hce', section='accounts', title='Highly compensated employee',
     'it after year end. The test reads last year’s pay.'),
      s=src('n2567'))
 
-SAVERS = {'single': 40250, 'mfj': 80500, 'mfs': 40250, 'hoh': 60375}
+SAVERS = {
+ 'iso':     ('IRC 422(d)', 'https://www.law.cornell.edu/uscode/text/26/422'),
+ 'espp':    ('IRC 423(b)(8)', 'https://www.law.cornell.edu/uscode/text/26/423'),
+ 'caploss': ('IRC 1211(b)', 'https://www.law.cornell.edu/uscode/text/26/1211'),
+ 'sec121':  ('IRC 121', 'https://www.law.cornell.edu/uscode/text/26/121'),'single': 40250, 'mfj': 80500, 'mfs': 40250, 'hoh': 60375}
 rule(id='savers_credit', section='accounts', title='Saver\u2019s Credit',
      measure='agi', shape='step', edges={st: (0, SAVERS[st]) for st in STATUSES},
      d=('A credit worth 50, 20, or 10 percent of what you contribute to a '
@@ -288,7 +300,7 @@ rule(id='itemized_top_limit', section='deductions', title='Itemized deduction li
      d=('To itemize is to list your deductions instead of taking the standard '
     'deduction. Once you reach the top bracket, your itemized deductions are '
     'cut by about 5.4 percent of the amount more than this point. The effect '
-    'is to cap their value at 35 cents in the dollar rather than 37.'),
+    'is to cap their value at 35 cents in the dollar rather than 37. The test adds your itemized deductions back before it compares, so it can start earlier than this bar shows.'),
      s=src('itemcap'))
 
 # ---- section: credits ------------------------------------------------------
@@ -320,13 +332,22 @@ rule(id='adoption_credit', section='credits', title='Adoption credit phase-out',
      s=src('adopt', 'rp2532'))
 
 rule(id='cdcc_rate', section='credits', title='Care credit rate falls',
-     measure='agi', shape='step', floor=True,
-     edges=by((15000, 75000), (15000, 150000), (15000, 75000), (15000, 75000)),
-     d=('The credit for child or adult care starts at 50 percent of what you '
-    'spend. It drops one point for each $2,000 of income more than $15,000. '
-    'It stops at 35 percent. It then falls again after the top of this band, '
-    'and stops at 20 percent. It never reaches zero.'),
-     s=src('cdcc', 'rp2532'))
+     short='Care credit', measure='agi', shape='step', floor=True,
+     edges=by((15000, 43001), (15000, 43001), (15000, 43001), (15000, 43001)),
+     d=('The child and dependent care credit starts at 50 percent of what you '
+        'spend. It falls one point for every $2,000 of income more than '
+        '$15,000. It stops at 35 percent. The rate then holds at 35 percent '
+        'until the second fall starts.'),
+     s=src('cdcc'), order=0)
+
+rule(id='cdcc_rate_2', section='credits', title='Care credit falls again',
+     short='Care credit 2', measure='agi', shape='step', floor=True,
+     edges=by((75000, 103001), (150000, 206001), (75000, 103001), (75000, 103001)),
+     d=('The second fall takes the care credit rate from 35 percent to 20 '
+        'percent. It drops one point for every $2,000 of income more than '
+        '$75,000. On a joint return it drops one point for every $4,000 more '
+        'than $150,000. The rate stops at 20 percent and stays there.'),
+     s=src('cdcc'), order=1)
 
 # ---- section: health -------------------------------------------------------
 
@@ -341,7 +362,7 @@ rule(id='ss_earnings_test', section='health', title='Social Security earnings te
      s=src('ssacola'))
 
 
-rule(id='aca_cliff', section='health', title='ACA subsidy cliff', measure='magi',
+rule(id='aca_cliff', section='health', title='ACA subsidy cliff', measure='magiTei',
      shape='cliff', needs='ownplan',
      edges=flat((62600, None)),  # 400% of FPL, household of one; scaled at runtime
      d=('This is the sharpest edge in the tax code, and it returned for 2026. If '
@@ -354,17 +375,35 @@ rule(id='aca_cliff', section='health', title='ACA subsidy cliff', measure='magi'
 IRMAA = [(109000, 218000, 81.20, 14.50), (137000, 274000, 202.90, 37.50),
          (171000, 342000, 324.60, 60.40), (205000, 410000, 446.30, 83.30),
          (500000, 750000, 487.00, 91.00)]
+# A separate return has three steps: nothing, then the fourth surcharge from
+# $109,000, then the fifth from $391,000. Tiers one to three do not exist.
+IRMAA_MFS = {
+ 'iso':     ('IRC 422(d)', 'https://www.law.cornell.edu/uscode/text/26/422'),
+ 'espp':    ('IRC 423(b)(8)', 'https://www.law.cornell.edu/uscode/text/26/423'),
+ 'caploss': ('IRC 1211(b)', 'https://www.law.cornell.edu/uscode/text/26/1211'),
+ 'sec121':  ('IRC 121', 'https://www.law.cornell.edu/uscode/text/26/121'),3: 109000, 4: 391000}
 for i, (s1, mj, partb, partd) in enumerate(IRMAA):
     rule(id='irmaa_%d' % (i + 1), section='health',
          title='Medicare surcharge, tier %d' % (i + 1),
-         measure='magi', shape='cliff', age_min=63,
-         edges=by((s1, None), (mj, None), (s1, None), (s1, None)),
+         measure='magiTei', shape='cliff', age_min=63,
+         edges=by((s1, None), (mj, None), (IRMAA_MFS.get(i), None), (s1, None)),
          d=('After this point Medicare charges $%.2f more each month for Part B '
             'and $%.2f more for Part D, for each person. Every tier is a hard '
             'edge and not a slope. One dollar can therefore cost hundreds over '
             'a year. It reads your income from two years earlier, so what you '
             'earn now sets your premium at 65.' % (partb, partd)),
          s=src('irmaa'))
+
+rule(id='ss_benefit_tax_mfs', section='health',
+     title='Benefits taxed, separate return', short='SS, separate',
+     measure='provisional', shape='open', age_min=62, needs='ssben',
+     edges=by((None, None), (None, None), (0, None), (None, None)),
+     d=('A married person who files separately, and who lived with their spouse '
+        'at any time in the year, gets no threshold. Up to 85 percent of the '
+        'benefit is taxable from the first dollar. This is the hardest version '
+        'of the rule. Living apart for the whole year moves you to the single '
+        'thresholds instead.'),
+     s=src('ssben'), order=1)
 
 rule(id='ss_benefit_tax', section='health', title='Social Security benefits taxed',
      measure='provisional', shape='phaseout', age_min=62, needs='ssben',
@@ -376,6 +415,28 @@ rule(id='ss_benefit_tax', section='health', title='Social Security benefits taxe
     'spouse gets no threshold. For that person, up to 85 percent is taxable '
     'from the first dollar.'),
      s=src('ssben'))
+
+# The audit found these absent. Each one binds for a salaried person at a
+# large employer, which is the reader this page is for.
+
+rule(id='comp_limit', section='accounts', title='Pay a plan can count',
+     short='Plan pay cap', measure='wages', shape='open',
+     edges=by((360000, None), (360000, None), (360000, None), (360000, None)),
+     d=('A retirement plan cannot count pay of more than $360,000 for the year. '
+        'Pay more than this earns no further employer match, and it does not '
+        'raise a contribution that is set as a percent of pay. A person who '
+        'earns more than this gets the whole match earlier in the year.'),
+     s=src('n2567'), order=5)
+
+rule(id='amt_rate_step', section='rates', title='AMT rate steps to 28%',
+     short='AMT 28% step', measure='amti', shape='open',
+     edges=by((334600, None), (384700, None), (192350, None), (334600, None)),
+     d=('The alternative minimum tax charges 26 percent, then 28 percent past '
+        'this point. The step is on income more than $244,500, or $122,250 on '
+        'a separate return, after the exemption. The figures here add the full '
+        'exemption back, so the step reads on the same measure as the '
+        'exemption phase-out.'),
+     s=src('rp2532'), order=9)
 
 # ---- section: filing -------------------------------------------------------
 
@@ -430,7 +491,8 @@ LIMITS = [
       d=('Money set aside for medical costs, from your pay before tax. If you have '
     'a general-purpose FSA, you cannot contribute to an HSA.'),
       s=src('rp2532')),
- dict(id='dcfsa', group='put', title='Dependent care FSA', base=7500, catch={},
+ dict(id='dcfsa', group='put', title='Dependent care FSA',
+     base={'single':7500,'mfj':7500,'mfs':3750,'hoh':7500}, catch={},
       d=('Raised from $5,000 for 2026, the first change since 1986. It is a '
          'household limit, not a per-person one.'),
       s=src('rp2532')),
@@ -457,11 +519,42 @@ LIMITS = [
     'return. It does not reduce the lifetime amount you can give before gift '
     'tax applies. A married couple can give twice this to the same person.'),
       s=src('rp2532')),
+
+ # The audit found these four absent. Every one of them binds for a salaried
+ # person at a large employer, which is the reader this page is for.
+ dict(id='iso_100k', group='put', title='ISO that can vest in a year',
+      base=100000, catch={},
+      d=('An incentive stock option keeps its tax treatment only up to $100,000 '
+         'of grant-date value that can first be exercised in one year. The part '
+         'more than this becomes a normal option. That part is taxed as pay at '
+         'exercise, with withholding, and not as an AMT item.'),
+      s=src('iso')),
+ dict(id='espp_25k', group='put', title='ESPP purchase in a year',
+      base=25000, catch={},
+      d=('A share purchase plan under section 423 lets you buy up to $25,000 of '
+         'stock in a year. The figure uses the price on the day of the grant, '
+         'not the price you pay. So the number of shares is fixed at the grant, '
+         'even when the purchase price is lower.'),
+      s=src('espp')),
+ dict(id='cap_loss', group='take', title='Capital loss against pay',
+      base={'single':3000,'mfj':3000,'mfs':1500,'hoh':3000}, catch={},
+      d=('A net capital loss offsets capital gain without limit. What is left '
+         'can reduce other income by $3,000 a year, or $1,500 on a separate '
+         'return. The rest carries forward to later years, and it keeps its '
+         'character as long-term or short-term.'),
+      s=src('caploss')),
+ dict(id='home_sale', group='take', title='Gain on a main home',
+      base={'single':250000,'mfj':500000,'mfs':250000,'hoh':250000}, catch={},
+      d=('Gain on the sale of a main home is not taxed up to this amount. You '
+         'must have owned the home, and lived in it as your main home, for two '
+         'of the five years before the sale. Neither figure rises with '
+         'inflation. The gain you exclude also stays outside the investment tax.'),
+      s=src('sec121')),
 ]
 
 # A phone gives a label about eighteen characters before it is cut off, so the
 # longer titles carry a short form. Anything not listed here already fits.
-SHORT = {'ltcg_0': '0% gains band', 'ltcg_15': '15% gains band', 'ltcg_20': '20% gains band', 'niit': 'Investment tax', 'addl_medicare': 'Extra Medicare tax', 'ss_wage_base': 'SS wage base', 'amt_phaseout': 'AMT exemption', 'supplemental_million': '37% withholding', 'roth_ira': 'Roth IRA', 'trad_ira_deduction': 'IRA deduction', 'roth_catch_up': 'Roth catch-up', 'hce': 'Highly compensated', 'savers_credit': 'Saver’s Credit', 'salt_phasedown': 'SALT cap', 'qbi_phasein': 'QBI limits', 'senior_deduction': 'Senior deduction', 'tips_deduction': 'Tips deduction', 'overtime_deduction': 'Overtime deduction', 'car_loan_deduction': 'Car loan interest', 'student_loan_interest': 'Student loan', 'itemized_top_limit': 'Itemized limit', 'ctc_phaseout': 'Child Tax Credit', 'education_credits': 'Education credits', 'adoption_credit': 'Adoption credit', 'cdcc_rate': 'Care credit rate', 'aca_cliff': 'ACA cliff', 'ss_benefit_tax': 'SS benefits taxed', 'ss_earnings_test': 'SS earnings test', 'irmaa_1': 'Surcharge tier 1', 'irmaa_2': 'Surcharge tier 2', 'irmaa_3': 'Surcharge tier 3', 'irmaa_4': 'Surcharge tier 4', 'irmaa_5': 'Surcharge tier 5'}
+SHORT = {'ltcg_0': '0% gains band', 'ltcg_15': '15% gains band', 'ltcg_20': '20% gains band', 'niit': 'Investment tax', 'addl_medicare': 'Extra Medicare tax', 'ss_wage_base': 'SS wage base', 'amt_phaseout': 'AMT exemption', 'supplemental_million': '37% withholding', 'roth_ira': 'Roth IRA', 'trad_ira_deduction': 'IRA deduction', 'roth_catch_up': 'Roth catch-up', 'hce': 'Highly compensated', 'savers_credit': 'Saver’s Credit', 'salt_phasedown': 'SALT cap', 'qbi_phasein': 'QBI limits', 'senior_deduction': 'Senior deduction', 'tips_deduction': 'Tips deduction', 'overtime_deduction': 'Overtime deduction', 'car_loan_deduction': 'Car loan interest', 'student_loan_interest': 'Student loan', 'itemized_top_limit': 'Itemized limit', 'ctc_phaseout': 'Child Tax Credit', 'education_credits': 'Education credits', 'adoption_credit': 'Adoption credit', 'cdcc_rate': 'Care credit', 'aca_cliff': 'ACA cliff', 'ss_benefit_tax': 'SS benefits taxed', 'ss_earnings_test': 'SS earnings test', 'irmaa_1': 'Surcharge tier 1', 'irmaa_2': 'Surcharge tier 2', 'irmaa_3': 'Surcharge tier 3', 'irmaa_4': 'Surcharge tier 4', 'irmaa_5': 'Surcharge tier 5'}
 
 for _r in RULES:
     if _r['id'] in SHORT:
