@@ -95,10 +95,11 @@ for i, pct in enumerate([10, 12, 22, 24, 32, 35, 37]):
       id='bracket_%d' % pct, section='rates', title='%d%% bracket' % pct, order=i,
       measure='taxable', shape='open' if pct == 37 else 'band',
       edges={st: (ORDINARY[st][i][0], ORDINARY[st][i][1]) for st in STATUSES},
-      d=('This rate applies only to the taxable income inside this band, not to '
-         'all of your income. Your first dollars are still taxed at 10 percent. '
-         'The band is measured on taxable income, which is your income after '
-         'the standard deduction or your itemized deductions.'),
+      d=('A band is a range of income. This rate applies only to the income '
+         'inside this band, and not to all of your income. Your first dollars '
+         'still pay 10 percent. The band uses taxable income, which is your '
+         'income after the standard deduction, or after the deductions you '
+         'list yourself.'),
       s=src('rp2532'))
 
 LTCG = {'single': (49450, 545500), 'mfj': (98900, 613700),
@@ -106,65 +107,70 @@ LTCG = {'single': (49450, 545500), 'mfj': (98900, 613700),
 
 rule(id='ltcg_0', section='rates', title='0% capital gains band', order=10, measure='taxable',
      shape='band', edges={st: (0, LTCG[st][0]) for st in STATUSES},
-     d=('Long-term gain and qualified dividends are taxed at zero in this band. '
-        'The band is measured on your total taxable income, not on the gain '
-        'alone. Ordinary income fills the band first, and only the room that is '
-        'left holds gain at zero.'),
+     d=('Long-term gain and qualified dividends pay no tax in this band. The '
+        'band uses your total taxable income, and not the gain alone. Your '
+        'other income fills the band first. Only the room that is left holds '
+        'gain at zero.'),
      s=src('rp2532'))
 rule(id='ltcg_15', section='rates', title='15% capital gains band', order=11, measure='taxable',
      shape='band', edges={st: LTCG[st] for st in STATUSES},
-     d=('Long-term gain and qualified dividends are taxed at 15 percent in this '
-        'band. To hold a gain at 15 percent you must hold the asset for more '
-        'than one year. A gain on an asset held one year or less is taxed at '
-        'your ordinary rate instead.'),
+     d=('Long-term gain and qualified dividends pay 15 percent in this band. '
+        'To get this rate you must own the asset for more than one year. A '
+        'gain on an asset you owned for one year or less pays your normal '
+        'income tax rate instead.'),
      s=src('rp2532'))
 rule(id='ltcg_20', section='rates', title='20% capital gains band', order=12, measure='taxable',
      shape='open', edges={st: (LTCG[st][1], None) for st in STATUSES},
-     d=('Long-term gain above this point is taxed at 20 percent. Add the 3.8 '
-        'percent Net Investment Income Tax and the real rate is 23.8 percent, '
-        'because the two use different measures of income and can both apply.'),
+     d=('Long-term gain more than this point is taxed at 20 percent. The Net '
+    'Investment Income Tax of 3.8 percent can apply to the same gain. The two '
+    'use different measures of income, so the real rate becomes 23.8 percent.'),
      s=src('rp2532', 'niit'))
 
 rule(id='niit', section='rates', title='Net Investment Income Tax', order=30, measure='magi',
      shape='open', edges=by((200000, None), (250000, None), (125000, None), (200000, None)),
      d=('A tax of 3.8 percent on investment income. It applies to the smaller of '
-        'your net investment income or the amount of MAGI above the threshold, '
-        'so it phases in rather than starting all at once. The threshold has '
-        'never been indexed, so more people cross it every year.'),
+    'two amounts: your net investment income, or the amount of MAGI more than '
+    'the threshold. MAGI is your adjusted gross income with a few items added '
+    'back. The tax grows with that excess. It does not start at the full rate '
+    'on the first dollar. The threshold was never raised for inflation, so '
+    'more people cross it each year.'),
      s=src('niit'))
 
 rule(id='addl_medicare', section='rates', title='Additional Medicare Tax', order=21, measure='wages',
      shape='open', edges=by((200000, None), (250000, None), (125000, None), (200000, None)),
-     d=('An extra 0.9 percent on wages above the threshold. Only the excess is '
-        'taxed. Your employer starts withholding it at $200,000 of pay from that '
-        'employer, whatever your filing status, so a two-earner couple can be '
-        'under-withheld and owe it at filing.'),
+     d=('An extra 0.9 percent on wages more than the threshold. Only the excess '
+    'is taxed. Your employer begins to take it from your pay at $200,000 from '
+    'that employer. Your filing status does not change that point. A two- '
+    'earner couple can therefore have too little taken, and can owe the tax '
+    'when they file.'),
      s=src('addmed'))
 
 rule(id='ss_wage_base', section='rates', title='Social Security wage base', order=20, measure='wages',
      shape='band', edges=flat((0, 184500)),
-     d=('Social Security tax of 6.2 percent applies to wages up to this point '
-        'and stops above it. The ceiling is per employer, not per person. If you '
-        'change jobs during the year, both employers withhold up to the full '
-        'base, and you claim the excess back as a credit.'),
+     d=('Social Security tax of 6.2 percent applies to wages up to this point. '
+    'Wages more than this point pay none. The ceiling is per employer, not '
+    'per person. If you change jobs during the year, both employers take the '
+    'tax up to the full base. You then claim the excess as a credit.'),
      s=src('ssacbb'))
 
 rule(id='amt_phaseout', section='rates', title='AMT exemption phase-out', order=31, measure='amti',
      shape='phaseout',
      edges=by((500000, 680200), (1000000, 1280400), (500000, 640200), (500000, 680200)),
-     d=('The Alternative Minimum Tax exemption shrinks by 50 cents for every '
-        'dollar above the start, so it disappears quickly. The 2025 law moved '
-        'the start down and doubled the rate from 25 percent. Exercising '
-        'incentive stock options adds to this measure, so it matters most in '
-        'the year you exercise.'),
+     d=('The Alternative Minimum Tax is a second calculation that can raise what '
+    'you owe. Its exemption shrinks by 50 cents for each dollar more than the '
+    'start. The exemption reaches zero after a short range. The 2025 law '
+    'moved the start down and doubled the rate from 25 percent. When you buy '
+    'shares under an incentive stock option, the discount adds to this '
+    'measure. That is why this matters most in the year you buy.'),
      s=src('rp2532', 'amt'))
 
 rule(id='supplemental_million', section='rates', title='37% supplemental withholding', order=22,
      measure='supplemental', shape='open', needs='supp', edges=flat((1000000, None)),
-     d=('Bonuses and vesting stock are withheld at a flat 22 percent until they '
-        'pass $1,000,000 for the year, then at 37 percent. Twenty-two percent is '
-        'below the rate most people at this income pay, which is why a large '
-        'vest often leaves a bill at filing.'),
+     d=('Bonuses and vesting stock are taxed at a flat 22 percent until they pass '
+    '$1,000,000 for the year. After that the rate is 37 percent. Vesting '
+    'stock is stock that becomes yours this year. Twenty-two percent is less '
+    'than the rate most people at this income pay. That is why a large vest '
+    'often leaves a bill when you file.'),
      s=src('supp'))
 
 # ---- section: accounts -----------------------------------------------------
@@ -172,97 +178,100 @@ rule(id='supplemental_million', section='rates', title='37% supplemental withhol
 rule(id='roth_ira', section='accounts', title='Roth IRA phase-out', measure='magi',
      shape='phaseout',
      edges=by((153000, 168000), (242000, 252000), (0, 10000), (153000, 168000)),
-     d=('Above the start you can put in less than the full amount. Above the end '
-        'you cannot contribute directly at all. Married filing separately runs '
-        'from zero to $10,000, which shuts out almost everyone who files that '
-        'way.'),
+     d=('A Roth IRA takes money you already paid tax on, and the growth can be '
+    'tax free later. After the start you can contribute less than the full '
+    'amount. After the end you cannot contribute directly at all. Married '
+    'filing separately runs from zero to $10,000. Almost nobody who files '
+    'that way can contribute.'),
      s=src('n2567', 'rothira'))
 
 rule(id='trad_ira_deduction', section='accounts', title='IRA deduction phase-out',
      measure='magi', shape='phaseout',
      edges=by((81000, 91000), (129000, 149000), (0, 10000), (81000, 91000)),
-     d=('This range applies when a workplace retirement plan covers you. Above '
-        'the end you can still contribute, but you cannot deduct it. If a plan '
-        'does not cover you, there is no income limit at all.'),
+     d=('This range applies when a workplace retirement plan covers you. After '
+    'the end you can still contribute, but you cannot deduct it. If no plan '
+    'covers you, there is no income limit at all.'),
      s=src('n2567', 'tradira'))
 
 rule(id='roth_catch_up', section='accounts', title='Roth catch-up required',
      measure='priorwages', shape='cliff', edges=flat((150000, None)),
-     d=('New for 2026. If you earned more than this from the employer that '
-        'sponsors your plan LAST year, your catch-up contributions must go in as '
-        'Roth. This one edge does not move with the income above, because it '
-        'reads last year and one employer. If the plan has no Roth option, the '
-        'catch-up is zero.'),
+     d=('New for 2026. Catch-up is the extra amount a person aged 50 or over can '
+    'contribute. Roth means you pay the tax now, and the growth can be tax '
+    'free later. Say you earned more than this last year from the employer '
+    'that sponsors your plan. All of your catch-up must then be Roth. This '
+    'edge does not move with the slider, because it reads last year and one '
+    'employer. If the plan has no Roth option, your catch-up is zero.'),
      s=src('n2567'))
 
 rule(id='hce', section='accounts', title='Highly compensated employee',
      measure='priorwages', shape='cliff', edges=flat((160000, None)),
-     d=('Above this, your plan treats you as highly compensated. Testing rules '
-        'can then cap what you defer, and some plans refund part of your '
-        'contribution after year end. The test reads last year\u2019s pay.'),
+     d=('If you earn more than this, your plan treats you as highly compensated. '
+    'Testing rules can then cap your contribution. Some plans refund part of '
+    'it after year end. The test reads last year’s pay.'),
      s=src('n2567'))
 
 SAVERS = {'single': 40250, 'mfj': 80500, 'mfs': 40250, 'hoh': 60375}
 rule(id='savers_credit', section='accounts', title='Saver\u2019s Credit',
      measure='agi', shape='step', edges={st: (0, SAVERS[st]) for st in STATUSES},
-     d=('A credit worth 50, 20, or 10 percent of what you put into a retirement '
-        'account, up to $2,000 of contributions. The rate drops in steps rather '
-        'than sliding, so one dollar of extra income can cut the credit sharply. '
-        'It ends completely at the top of this band.'),
+     d=('A credit worth 50, 20, or 10 percent of what you contribute to a '
+    'retirement account, on the first $2,000. The rate drops in steps and '
+    'does not slide. One dollar of extra income can therefore cut the credit '
+    'sharply. The credit ends at the top of this band.'),
      s=src('savers', 'rp2532'))
 
 # ---- section: deductions ---------------------------------------------------
 
-rule(id='salt_phasedown', section='deductions', title='SALT cap phase-down', measure='magi',
+rule(id='salt_phasedown', section='deductions', title='SALT cap phase-out', measure='magi',
      shape='phaseout',
      edges=by((505000, 606333), (505000, 606333), (252500, 303167), (505000, 606333)),
-     d=('The state and local tax cap is $40,400 for 2026, far above the old '
-        '$10,000. Above the start it falls by 30 cents per dollar of income, but '
-        'it never drops below $10,000. So it shrinks and then stops shrinking.'),
+     d=('SALT means state and local tax. The cap on that deduction is $40,400 for '
+    '2026, far more than the old $10,000. After the start the cap falls by 30 '
+    'cents for each dollar of income. The floor is $10,000.'),
      s=src('salt', 'rp2532'))
 
 rule(id='qbi_phasein', section='deductions', title='QBI limits phase in', measure='taxable',
      shape='phaseout',
      edges=by((201750, 276750), (403500, 553500), (201775, 276775), (201750, 276750)),
-     d=('Below the start, the 20 percent deduction on business income has no wage '
-        'test and no restriction on the type of work. Across this range the wage '
-        'test phases in, and for professional service work the deduction phases '
-        'out completely.'),
+     d=('QBI means qualified business income. Under the start, the 20 percent '
+    'deduction on that income has no wage test and no restriction on the type '
+    'of work. Across this range a limit based on the wages the business pays '
+    'takes effect. For professional service work the deduction disappears '
+    'completely.'),
      s=src('qbi'))
 
 rule(id='senior_deduction', section='deductions', title='Senior deduction phase-out',
      measure='magi', shape='phaseout', age_min=65,
      edges=by((75000, 175000), (150000, 250000), (None, None), (75000, 175000)),
-     d=('A deduction of $6,000 for each person aged 65 or over, on top of the '
-        'usual extra standard deduction for age. It falls by 6 cents per dollar '
-        'above the start. A couple where both qualify get two of them, and both '
-        'reach zero at the same income. It ends after 2028.'),
+     d=('A deduction of $6,000 for each person aged 65 or over. It is separate '
+    'from the extra standard deduction for age. It falls by 6 cents for each '
+    'dollar more than the start. A couple where both qualify get two of them, '
+    'and both reach zero at the same income. It ends after 2028.'),
      s=src('s1a', 'rp2532'))
 
 rule(id='tips_deduction', section='deductions', title='Tips deduction phase-out',
      measure='magi', shape='step', needs='tips',
      edges=by((150000, None), (300000, None), (None, None), (150000, None)),
-     d=('Up to $25,000 of tip income is deductible. Above the start it falls by '
-        '$100 for each full $1,000 of income, so it drops in steps rather than '
-        'sliding. Where it reaches zero depends on how much you earned in tips, '
-        'not on the cap. It ends after 2028.'),
+     d=('Up to $25,000 of tip income is deductible. After the start it falls by '
+    '$100 for each full $1,000 of income, so it drops in steps and does not '
+    'slide. Where it reaches zero depends on how much you earned in tips. It '
+    'does not depend on the cap. It ends after 2028.'),
      s=src('s1a'))
 
 rule(id='overtime_deduction', section='deductions', title='Overtime deduction phase-out',
      measure='magi', shape='step', needs='overtime',
      edges=by((150000, None), (300000, None), (None, None), (150000, None)),
      d=('Up to $12,500 of overtime pay is deductible, or $25,000 on a joint '
-        'return. It falls by $100 for each full $1,000 of income above the '
-        'start, in steps. It ends after 2028.'),
+    'return. It falls by $100 for each full $1,000 of income more than the '
+    'start, in steps. It ends after 2028.'),
      s=src('s1a'))
 
 rule(id='car_loan_deduction', section='deductions', title='Car loan interest phase-out',
      measure='magi', shape='step', needs='carloan',
      edges=by((100000, None), (200000, None), (None, None), (100000, None)),
      d=('Up to $10,000 of interest on a loan for a new car assembled in the '
-        'United States. It falls by $200 for each $1,000 of income above the '
-        'start, and this one rounds against you rather than for you. It ends '
-        'after 2028.'),
+    'United States. It falls by $200 for each $1,000 of income more than the '
+    'start. This one rounds the income up rather than down, so you lose the '
+    'deduction one step sooner. It ends after 2028.'),
      s=src('s1a'))
 
 rule(id='student_loan_interest', section='deductions', title='Student loan interest phase-out',
@@ -273,12 +282,13 @@ rule(id='student_loan_interest', section='deductions', title='Student loan inter
         'separately cannot claim it at all.'),
      s=src('sli'))
 
-rule(id='itemized_top_limit', section='deductions', title='Itemized deduction haircut',
+rule(id='itemized_top_limit', section='deductions', title='Itemized deduction limit',
      measure='taxable', shape='open',
      edges=by((640600, None), (768700, None), (384350, None), (640600, None)),
-     d=('Once you reach the top bracket, itemized deductions are cut by two '
-        'thirty-sevenths of the amount above this point. The effect is to cap '
-        'their value at 35 cents on the dollar rather than 37.'),
+     d=('To itemize is to list your deductions instead of taking the standard '
+    'deduction. Once you reach the top bracket, your itemized deductions are '
+    'cut by about 5.4 percent of the amount more than this point. The effect '
+    'is to cap their value at 35 cents in the dollar rather than 37.'),
      s=src('itemcap'))
 
 # ---- section: credits ------------------------------------------------------
@@ -286,10 +296,10 @@ rule(id='itemized_top_limit', section='deductions', title='Itemized deduction ha
 rule(id='ctc_phaseout', section='credits', title='Child Tax Credit phase-out', measure='magi',
      shape='step', needs='children',
      edges=by((200000, None), (400000, None), (200000, None), (200000, None)),
-     d=('The credit is $2,200 for each qualifying child. Above the start it falls '
-        'by $50 for each $1,000 of income. Where it reaches zero depends on how '
-        'many children you have, so the end of this band moves with your family '
-        'and not with a fixed number.'),
+     d=('The credit is $2,200 for each qualifying child. After the start it falls '
+    'by $50 for each $1,000 of income. Where the credit reaches zero depends '
+    'on how many children you have. The end of this band therefore moves with '
+    'your family, and it is not a fixed amount.'),
      s=src('ctc', 'rp2532'))
 
 rule(id='education_credits', section='credits', title='Education credits phase-out',
@@ -304,18 +314,18 @@ rule(id='education_credits', section='credits', title='Education credits phase-o
 rule(id='adoption_credit', section='credits', title='Adoption credit phase-out',
      measure='magi', shape='phaseout',
      edges=flat((265080, 305080)),
-     d=('A credit of up to $17,670 for each child you adopt, of which $5,120 can '
-        'come back to you as a refund even if you owe no tax. It slides to zero '
-        'across this range.'),
+     d=('The credit is up to $17,670 for each child you adopt. Of that amount, '
+    '$5,120 is refundable, so you can receive it even if you owe no tax. The '
+    'credit slides to zero across this range.'),
      s=src('adopt', 'rp2532'))
 
 rule(id='cdcc_rate', section='credits', title='Care credit rate falls',
      measure='agi', shape='step',
      edges=by((15000, 75000), (15000, 150000), (15000, 75000), (15000, 75000)),
      d=('The credit for child or adult care starts at 50 percent of what you '
-        'spend and drops one point for every $2,000 of income above $15,000. It '
-        'stops falling at 35 percent, then starts falling again at the top of '
-        'this band and stops for good at 20 percent. It never reaches zero.'),
+    'spend. It drops one point for each $2,000 of income more than $15,000. '
+    'It stops at 35 percent. It then falls again after the top of this band, '
+    'and stops at 20 percent. It never reaches zero.'),
      s=src('cdcc', 'rp2532'))
 
 # ---- section: health -------------------------------------------------------
@@ -323,20 +333,22 @@ rule(id='cdcc_rate', section='credits', title='Care credit rate falls',
 rule(id='ss_earnings_test', section='health', title='Social Security earnings test',
      measure='wages', shape='open', age_min=62, age_max=66, needs='ssben',
      edges=flat((24480, None)),
-     d=('If you draw Social Security before your full retirement age and keep '
-        'working, SSA holds back $1 of benefit for every $2 you earn above this '
-        'point. The money is not lost. Your benefit is recalculated upward once '
-        'you reach full retirement age.'),
+     d=('Full retirement age is the age at which you can draw your whole benefit. '
+    'Say you draw Social Security before that age and you still work. SSA '
+    'then keeps back $1 of benefit for each $2 you earn more than this point. '
+    'The money is not lost. SSA raises your benefit again when you reach full '
+    'retirement age.'),
      s=src('ssacola'))
 
 
 rule(id='aca_cliff', section='health', title='ACA subsidy cliff', measure='magi',
      shape='cliff', needs='ownplan',
      edges=flat((62600, None)),  # 400% of FPL, household of one; scaled at runtime
-     d=('The sharpest edge in the tax code, and it came back for 2026. Below 400 '
-        'percent of the poverty level you can get help paying a health plan you '
-        'buy yourself. One dollar above it, you get nothing. The 2025 law also '
-        'removed the cap on paying back credits you already received.'),
+     d=('This is the sharpest edge in the tax code, and it returned for 2026. If '
+    'your income is less than 400 percent of the poverty level, you can get '
+    'help to pay for a health plan you buy yourself. One dollar more and you '
+    'get nothing. The 2025 law also removed the cap on repaying help you '
+    'already received.'),
      s=src('ptc', 'fpl', 'rp2525'))
 
 IRMAA = [(109000, 218000, 81.20, 14.50), (137000, 274000, 202.90, 37.50),
@@ -347,31 +359,32 @@ for i, (s1, mj, partb, partd) in enumerate(IRMAA):
          title='Medicare surcharge, tier %d' % (i + 1),
          measure='magi', shape='cliff', age_min=63,
          edges=by((s1, None), (mj, None), (s1, None), (s1, None)),
-         d=('Above this point Medicare charges $%.2f more per month for Part B '
-            'and $%.2f more for Part D, for each person. Every tier is a cliff, '
-            'not a slope, so one dollar can cost hundreds over a year. It reads '
-            'your income from two years earlier, so what you earn now sets your '
-            'premium at 65.' % (partb, partd)),
+         d=('After this point Medicare charges $%.2f more each month for Part B '
+            'and $%.2f more for Part D, for each person. Every tier is a hard '
+            'edge and not a slope. One dollar can therefore cost hundreds over '
+            'a year. It reads your income from two years earlier, so what you '
+            'earn now sets your premium at 65.' % (partb, partd)),
          s=src('irmaa'))
 
 rule(id='ss_benefit_tax', section='health', title='Social Security benefits taxed',
      measure='provisional', shape='phaseout', age_min=62, needs='ssben',
      edges=by((25000, 34000), (32000, 44000), (None, None), (25000, 34000)),
-     d=('Part of your Social Security benefit becomes taxable above these points. '
-        'Up to half is taxed in the lower band and up to 85 percent above it. '
-        'These figures were set in 1983 and 1993 and have never been indexed. '
-        'A married person who files separately and lived with their spouse gets '
-        'no threshold at all, so up to 85 percent is taxable from the first '
-        'dollar.'),
+     d=('Part of your Social Security benefit becomes taxable after these points. '
+    'Up to half is taxed in the lower band and up to 85 percent after it. '
+    'These figures were set in 1983 and 1993, and they were never raised for '
+    'inflation. A married person who files separately and lived with their '
+    'spouse gets no threshold. For that person, up to 85 percent is taxable '
+    'from the first dollar.'),
      s=src('ssben'))
 
 # ---- section: filing -------------------------------------------------------
 
 rule(id='estimated_110', section='filing', title='110% safe harbor', measure='agi',
      shape='open', edges=by((150000, None), (150000, None), (75000, None), (150000, None)),
-     d=('To avoid an underpayment penalty you normally pay in 100 percent of last '
-        'year\u2019s tax. Above this income the figure rises to 110 percent. This '
-        'catches people the year after a large vest or a large gain.'),
+     d=('To avoid a penalty you normally pay 100 percent of last year’s tax '
+    'during the year. If your income is more than this, the figure rises to '
+    '110 percent. The rule is called a safe harbor. It catches people in the '
+    'year after a large vest or a large gain.'),
      s=src('estim'))
 
 # ------------------------------------------------------ age-driven limits ---
@@ -393,13 +406,14 @@ LIMITS = [
       s=src('rp2532')),
  dict(id='deferral', title='401(k) and 403(b) deferral', base=24500,
       catch={50: 8000, 60: 11250, 64: 8000},
-      d=('The most you can put into a workplace plan from your own pay. Employer '
-         'money does not count against this. The extra at 50 rises again for the '
-         'four years from 60 to 63, then drops back at 64.'),
+      d=('The most you can contribute to a workplace plan from your own pay. '
+    'Employer money does not count against this. The extra amount allowed at '
+    '50 rises again for the four years from 60 to 63, then drops back at 64.'),
       s=src('n2567')),
  dict(id='ira', title='IRA contribution', base=7500, catch={50: 1100},
-      d=('One limit across every traditional and Roth IRA you own. It is not per '
-         'account. You need earned income at least equal to what you put in.'),
+      d=('One limit across every traditional and Roth IRA you own. It is not a '
+    'limit for each account. You need earned income at least equal to the '
+    'amount you contribute.'),
       s=src('n2567')),
  dict(id='hsa_self', title='HSA, self-only cover', base=4400, catch={55: 1000},
       needs='hdhp',
@@ -413,8 +427,8 @@ LIMITS = [
          'is per person, so two spouses need two accounts to claim it twice.'),
       s=src('rp2519')),
  dict(id='fsa', title='Health FSA', base=3400, catch={},
-      d=('Money set aside for medical costs, from your pay before tax. Holding a '
-         'general-purpose FSA stops you from contributing to an HSA.'),
+      d=('Money set aside for medical costs, from your pay before tax. If you have '
+    'a general-purpose FSA, you cannot contribute to an HSA.'),
       s=src('rp2532')),
  dict(id='dcfsa', title='Dependent care FSA', base=7500, catch={},
       d=('Raised from $5,000 for 2026, the first change since 1986. It is a '
@@ -422,9 +436,10 @@ LIMITS = [
       s=src('rp2532')),
  dict(id='additions', title='Total 401(k) additions', base=72000, catch={},
       d=('Everything that can land in the plan for you in one year: your own '
-         'deferral, the employer match, and after-tax money. Catch-up sits '
-         'outside this. The room between this and your own deferral is what a '
-         'mega-backdoor Roth uses.'),
+    'contribution, the employer match, and after-tax money. Catch-up sits '
+    'outside this. The gap between this limit and your own contribution is '
+    'the room for a large after-tax contribution. Some plans let that money '
+    'move to a Roth account later.'),
       s=src('n2567')),
  dict(id='simple', title='SIMPLE IRA deferral', base=17000,
       catch={50: 4000},
@@ -433,20 +448,20 @@ LIMITS = [
       s=src('n2567')),
  dict(id='qcd', title='Charity gift from an IRA', base=111000, catch={}, ageMin=70,
       d=('From age 70 and a half you can send money straight from an IRA to a '
-         'charity. It never lands in your income, so it does not push up any of '
-         'the income measures on this page, and it counts toward a required '
-         'withdrawal.'),
+    'charity. The gift is not part of your income, so it does not raise any '
+    'income measure on this page. It also counts toward the minimum amount '
+    'you must take from the IRA each year.'),
       s=src('n2567')),
  dict(id='gift', title='Gift to one person, tax free', base=19000, catch={},
-      d=('You can give this much to any one person in the year without using up '
-         'any of your lifetime exclusion and without filing a gift tax return. '
-         'A married couple can give twice this to the same person.'),
+      d=('You can give this much to any one person in the year with no gift tax '
+    'return. It does not reduce the lifetime amount you can give before gift '
+    'tax applies. A married couple can give twice this to the same person.'),
       s=src('rp2532')),
 ]
 
 # A phone gives a label about eighteen characters before it is cut off, so the
 # longer titles carry a short form. Anything not listed here already fits.
-SHORT = {'ltcg_0': '0% gains band', 'ltcg_15': '15% gains band', 'ltcg_20': '20% gains band', 'niit': 'Investment tax', 'addl_medicare': 'Extra Medicare tax', 'ss_wage_base': 'SS wage base', 'amt_phaseout': 'AMT exemption', 'supplemental_million': '37% withholding', 'roth_ira': 'Roth IRA', 'trad_ira_deduction': 'IRA deduction', 'roth_catch_up': 'Roth catch-up', 'hce': 'Highly compensated', 'savers_credit': 'Saver’s Credit', 'salt_phasedown': 'SALT cap', 'qbi_phasein': 'QBI limits', 'senior_deduction': 'Senior deduction', 'tips_deduction': 'Tips deduction', 'overtime_deduction': 'Overtime deduction', 'car_loan_deduction': 'Car loan interest', 'student_loan_interest': 'Student loan', 'itemized_top_limit': 'Itemized haircut', 'ctc_phaseout': 'Child Tax Credit', 'education_credits': 'Education credits', 'adoption_credit': 'Adoption credit', 'cdcc_rate': 'Care credit rate', 'aca_cliff': 'ACA cliff', 'ss_benefit_tax': 'SS benefits taxed', 'ss_earnings_test': 'SS earnings test', 'irmaa_1': 'Surcharge tier 1', 'irmaa_2': 'Surcharge tier 2', 'irmaa_3': 'Surcharge tier 3', 'irmaa_4': 'Surcharge tier 4', 'irmaa_5': 'Surcharge tier 5'}
+SHORT = {'ltcg_0': '0% gains band', 'ltcg_15': '15% gains band', 'ltcg_20': '20% gains band', 'niit': 'Investment tax', 'addl_medicare': 'Extra Medicare tax', 'ss_wage_base': 'SS wage base', 'amt_phaseout': 'AMT exemption', 'supplemental_million': '37% withholding', 'roth_ira': 'Roth IRA', 'trad_ira_deduction': 'IRA deduction', 'roth_catch_up': 'Roth catch-up', 'hce': 'Highly compensated', 'savers_credit': 'Saver’s Credit', 'salt_phasedown': 'SALT cap', 'qbi_phasein': 'QBI limits', 'senior_deduction': 'Senior deduction', 'tips_deduction': 'Tips deduction', 'overtime_deduction': 'Overtime deduction', 'car_loan_deduction': 'Car loan interest', 'student_loan_interest': 'Student loan', 'itemized_top_limit': 'Itemized limit', 'ctc_phaseout': 'Child Tax Credit', 'education_credits': 'Education credits', 'adoption_credit': 'Adoption credit', 'cdcc_rate': 'Care credit rate', 'aca_cliff': 'ACA cliff', 'ss_benefit_tax': 'SS benefits taxed', 'ss_earnings_test': 'SS earnings test', 'irmaa_1': 'Surcharge tier 1', 'irmaa_2': 'Surcharge tier 2', 'irmaa_3': 'Surcharge tier 3', 'irmaa_4': 'Surcharge tier 4', 'irmaa_5': 'Surcharge tier 5'}
 
 for _r in RULES:
     if _r['id'] in SHORT:
@@ -493,12 +508,72 @@ def emit():
     out.append('];')
     return '\n'.join(out)
 
+# Words and forms that ASD-STE100 does not allow, with what to write instead.
+# "above" and "below" are for physical position, not for amounts. The -ing
+# forms are verbs here, which the standard reserves for nouns. The rest are
+# phrasal verbs, which do not survive translation and are hard for a reader
+# whose first language is not English.
+BANNED = [
+ (' above ',       'more than'),
+ (' below ',       'less than'),
+ ('has never',     'simple past'),
+ ('have never',    'simple past'),
+ ('starts withhold', 'begins to take'),
+ (' starting',     'a simple verb'),
+ ('shrinking',     'shrinks'),
+ (' falling',      'falls'),
+ ('keep working',  'you still work'),
+ ('holds back',    'keeps back'),
+ ('contributing',  'you contribute'),
+ ('using up',      'a reduction of'),
+ ('put in',        'contribute'),
+ ('put into',      'contribute to'),
+ ('work out',      'calculate'),
+ ('fills in',      'appears'),
+ ('comes out',     'is removed'),
+ ('push up',       'raise'),
+ ('lands in',      'is part of'),
+ ('go in as',      'be'),
+ ('come back to you', 'return to you'),
+ ('claim the excess back', 'claim the excess'),
+ ('shuts out',     'cannot contribute'),
+ ('for good',      'delete it'),
+ ('haircut',       'limit'),
+]
+MAX_WORDS = 25
+
+def language_problems(where, text):
+    """Flag the STE breaks that a reviewer found, so they cannot come back."""
+    out = []
+    low = ' ' + text.lower() + ' '
+    for word, better in BANNED:
+        if word in low:
+            out.append('%s: %r is not allowed, use %s' % (where, word.strip(), better))
+    import re as _re
+    for sentence in _re.split(r'(?<=[.!?]) +', text):
+        n = len(sentence.split())
+        if n > MAX_WORDS:
+            out.append('%s: sentence of %d words, limit is %d: %r'
+                       % (where, n, MAX_WORDS, sentence[:70]))
+    return out
+
 RULE_KEYS = {'id','section','title','measure','shape','edges','d','s','order',
              'age_min','age_max','needs','short'}
 LIMIT_KEYS = {'id','title','base','catch','d','s','ageMin','needs'}
 
 def check():
     bad = []
+    for r in RULES:
+        bad += language_problems('rule ' + r['id'], r['d'])
+        bad += [b for b in language_problems('title ' + r['id'], r['title'])
+                if 'sentence of' not in b]
+        if r.get('short'):
+            bad += [b for b in language_problems('short ' + r['id'], r['short'])
+                    if 'sentence of' not in b]
+    for l in LIMITS:
+        bad += language_problems('limit ' + l['id'], l['d'])
+        bad += [b for b in language_problems('limit title ' + l['id'], l['title'])
+                if 'sentence of' not in b]
     for r in RULES:
         for k in set(r) - RULE_KEYS:
             bad.append('rule %s has an unknown key %r' % (r['id'], k))

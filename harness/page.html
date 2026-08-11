@@ -359,6 +359,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 .numbers div{border-top:1px solid var(--grid);padding-top:4px}
 .numbers .k{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .numbers .v{font-family:var(--display);font-weight:700;font-size:15px}
+.numbers .note{font-size:11.5px;color:var(--faint);line-height:1.35;margin-top:1px}
 .srcs{font-size:11.5px;color:var(--faint);display:flex;flex-wrap:wrap;gap:4px 12px}
 .srcs a{color:var(--faint)}
 .srcs a:hover{color:var(--ink)}
@@ -458,7 +459,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
   <div class="sliderwrap">
     <div class="sliderhead">
       <div class="big" id="incomeBig">$0</div>
-      <div class="cap">Total income &middot; drag to move</div>
+      <div class="cap">Total income. Drag to change it.</div>
     </div>
     <input id="income" type="range" min="0" max="250000" step="1000" value="120000"
            aria-label="Total income">
@@ -476,22 +477,22 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
       <div class="field"><label for="mStg">Short-term gain</label><input id="mStg" type="number" min="0" step="1000" value="0"></div>
       <div class="field"><label for="mExempt">Tax-exempt interest</label><input id="mExempt" type="number" min="0" step="500" value="0"></div>
     </div>
-    <p class="hint">Enter pay before any deduction comes out, not the wages box on
-      your W-2. The slider scales this mix up and down and holds the proportions
-      steady, so the shape of your income stays the same as the amount changes.</p>
+    <p class="hint">Enter your pay before any deduction is removed. Do not use the
+      wages box on your W-2. The slider changes the total and keeps the same
+      proportions, so the shape of your income does not change.</p>
   </details>
 
   <details class="more">
-    <summary>What you put away</summary>
+    <summary>What you contribute</summary>
     <div class="crow">
       <div class="field"><label for="a401k">401(k), before tax</label><input id="a401k" type="number" min="0" step="500" value="0"></div>
       <div class="field"><label for="aHsa">HSA, from pay</label><input id="aHsa" type="number" min="0" step="100" value="0"></div>
       <div class="field"><label for="aIso">ISO exercise spread</label><input id="aIso" type="number" min="0" step="1000" value="0"></div>
     </div>
-    <p class="hint">Money into a traditional 401(k) lowers income tax but not
+    <p class="hint">Money into a traditional 401(k) lowers income tax, but not
       Social Security or Medicare tax. Money into an HSA from your pay lowers
-      both. The spread on an incentive stock option raises the alternative
-      minimum tax measure only.</p>
+      both. The spread is the discount you get when you buy shares under an
+      incentive stock option. It raises the AMT measure only.</p>
   </details>
 
   <details class="more">
@@ -527,8 +528,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 
 <footer class="foot">
   <p>Every figure is for tax year 2026 and for federal tax only. State and local
-    tax is not shown. The page shows where the edges are. It does not work out
-    what you owe.</p>
+    tax is not shown. The page shows where the edges are. It does not
+    calculate what you owe.</p>
   <p class="disc">This page is for illustration. It is not tax advice and it is
     not financial advice. The figures come from public IRS, SSA, and CMS
     documents for tax year 2026, and they can contain errors. Tax rules change,
@@ -539,7 +540,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--se
 <div class="scrim" id="scrim" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <h2 id="mTitle">Start here</h2>
-    <p>Three answers and the chart fills in. You can change any of them later.</p>
+    <p>Give three answers. Then the chart appears. You can change any answer later.</p>
     <div class="field">
       <label for="mStatus">Filing status</label>
       <select id="mStatus">
@@ -867,7 +868,7 @@ function renderChart(){
   if (!shown){
     const e = document.createElement('div');
     e.className = 'empty';
-    e.textContent = 'No rules to show. Turn a section back on above.';
+    e.textContent = 'There is nothing to show. Turn a section on again.';
     track.appendChild(e);
   }
 
@@ -926,8 +927,8 @@ function renderSummary(){
      nothingTaxed ? 'your deduction covers it all' : 'on your next dollar of pay'],
     ['Long-term gain', nothingTaxed ? '0%' : ltRate, 'on your next dollar of gain'],
     ['Taxable income', fmt(M.taxable), 'after a ' + fmt(M.deduction) + ' deduction'],
-    ['Phasing out', String(inside), inside === 1 ? 'benefit is shrinking now' : 'benefits are shrinking now'],
-    ['Already gone', String(lost), lost === 1 ? 'benefit is fully phased out' : 'benefits are fully phased out'],
+    ['Phasing out', String(inside), inside === 1 ? 'benefit shrinks as you earn more' : 'benefits shrink as you earn more'],
+    ['Already gone', String(lost), lost === 1 ? 'benefit is now zero' : 'benefits are now zero'],
     ['Cliffs passed', String(cliffs), cliffs === 1 ? 'hard edge is behind you' : 'hard edges are behind you'],
   ];
   $('summary').innerHTML = cells.map(c =>
@@ -964,7 +965,7 @@ function renderLimits(){
   }
   if (!box.children.length){
     box.innerHTML = '<span class="lt" style="color:var(--faint)">' +
-      'Nothing to show. Tick the high-deductible plan box for the HSA limits.</span>';
+      'There is nothing to show. Tick the high-deductible plan box for the HSA limits.</span>';
   }
 }
 
@@ -984,20 +985,21 @@ function renderFilters(){
 }
 
 const WHERE = {
-  below: ['Below this', 'You have not reached this yet.'],
+  below: ['Not yet', 'Your income is still less than this edge.'],
   inside: ['You are here', 'This applies to you right now.'],
-  above: ['Past this', 'You are above the top of this band.'],
+  above: ['Past this', 'Your income is more than the top of this band.'],
 };
 
 function renderDetail(){
   const d = $('detail');
   if (!S.picked){
     d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any row</h3>' +
-      '<p>Select a bar to read what it is, where its edges fall for you, and ' +
-      'which document the figures come from. A solid bar is a fixed band. A bar ' +
-      'that fades is a benefit that slides away. A staircase drops in steps. A ' +
-      'hatched bar with a hard left edge is a cliff, where one dollar changes ' +
-      'the answer.</p>';
+      '<p>Select a bar on the chart. You can then read what it is, where its ' +
+      'edges fall for you, and which document the figures come from.</p>' +
+      '<p>The shape of a bar tells you what kind of edge it is. A solid bar is ' +
+      'a fixed range. A bar that fades is a benefit that gets smaller as your ' +
+      'income rises. A staircase drops in steps. A hatched bar with a hard ' +
+      'left edge is a cliff, where one dollar changes the answer.</p>';
     return;
   }
   const lim = LIMITS.find(l => l.id === S.picked);
@@ -1024,16 +1026,26 @@ function renderDetail(){
     return;
   }
   const s = standing(p, rule.shape);
-  const measureName = {
-    taxable:'taxable income', agi:'adjusted gross income', magi:'modified AGI',
-    wages:'wages', amti:'AMT income', supplemental:'bonus and vesting pay',
-    priorwages:'last year\u2019s pay', provisional:'provisional income',
-  }[rule.m] || rule.m;
+  /* A reader who does not know what MAGI is learns nothing from the words
+     "modified AGI", and the panel says the measure name twice. Gloss it. */
+  const MEASURE = {
+    taxable:['taxable income', 'your income after the standard deduction'],
+    ordinary:['ordinary income', 'taxable income, less any long-term gain'],
+    agi:['adjusted gross income', 'your income after a few adjustments, before the deduction'],
+    magi:['modified AGI', 'adjusted gross income, with a few items added back'],
+    wages:['wages', 'the pay that Social Security and Medicare tax applies to'],
+    amti:['AMT income', 'the income the alternative minimum tax uses'],
+    supplemental:['bonus and vesting pay', 'pay that is not your normal salary'],
+    priorwages:['last year\u2019s pay', 'pay from one employer, in the year before'],
+    provisional:['provisional income', 'a figure used only to tax Social Security'],
+  };
+  const measureName = (MEASURE[rule.m] || [rule.m, ''])[0];
+  const measureGloss = (MEASURE[rule.m] || ['', ''])[1];
 
   const M = measure(S.income);
   let next = '';
-  if (s === 'below') next = 'It starts ' + fmt(p.lo - S.income) + ' above where you are.';
-  else if (s === 'inside' && p.hi !== null) next = 'It runs out ' + fmt(p.hi - S.income) + ' above where you are.';
+  if (s === 'below') next = 'It starts ' + fmt(p.lo - S.income) + ' more than your income.';
+  else if (s === 'inside' && p.hi !== null) next = 'It ends ' + fmt(p.hi - S.income) + ' more than your income.';
 
   d.innerHTML = '<div class="kicker">' + SEC_NAME[rule.sec] + '</div>' +
     '<h3>' + esc(rule.t) + '</h3>' +
@@ -1041,7 +1053,7 @@ function renderDetail(){
       WHERE[s][0] + ' \u00b7 ' + WHERE[s][1] + (next ? ' ' + next : '') + '</div>' +
     '<p>' + esc(rule.d) + '</p>' +
     '<div class="numbers">' +
-      num('Measured on', measureName) +
+      num('Measured on', measureName, measureGloss) +
       num('Your ' + measureName, fmt(M[rule.m])) +
       num('Edge, on that measure', p.rawHi === null ? fmt(p.rawLo) + ' and up'
           : fmt(p.rawLo) + ' to ' + fmt(p.rawHi)) +
@@ -1050,7 +1062,10 @@ function renderDetail(){
     '</div>' + srcHtml(rule.s);
 }
 
-function num(k, v){ return '<div><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div></div>'; }
+function num(k, v, note){
+  return '<div><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) +
+         '</div>' + (note ? '<div class="note">' + esc(note) + '</div>' : '') + '</div>';
+}
 function srcHtml(list){
   return '<div class="srcs">' + list.map(s =>
     '<a href="' + esc(s[1]) + '" target="_blank" rel="noopener">' + esc(s[0]) + '</a>'

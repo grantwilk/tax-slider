@@ -438,6 +438,39 @@ function base(over) {
        return t.limitFor(t.LIMITS.find(l => l.id === 'deferral')).total;
      }), 32500);
 
+  // The rule set is checked for Simplified Technical English at build time.
+  // The page's own prose is not, so check it here, against the same rules.
+  await page.evaluate(() => {
+    const t = window.__ts;
+    t.S.status = 'single'; t.S.age = 40; t.S.children = 0; t.S.income = 120000;
+    t.S.off = {}; t.S.picked = 'roth_ira';
+    t.render();
+  });
+  const prose = await page.evaluate(() => {
+    const out = [];
+    for (const el of document.querySelectorAll(
+        '.hint, .detail p, .detail .where, .foot p, .modal p, .stat .n, '
+      + '.numbers .note, .empty, .sechead'))
+      out.push(el.innerText.replace(/\s+/g, ' ').trim());
+    return out.filter(Boolean);
+  });
+  ok('the page has prose to check', prose.length > 6, prose.length, 'more than 6 blocks');
+
+  const banned = [' above ', ' below ', 'has never', 'have never', 'shrinking',
+                  'work out', 'fills in', 'comes out', 'put away', 'put in',
+                  'phased out', 'haircut'];
+  const proseFaults = [];
+  for (const block of prose) {
+    const low = ' ' + block.toLowerCase() + ' ';
+    for (const w of banned)
+      if (low.includes(w)) proseFaults.push(`${w.trim()} in "${block.slice(0, 55)}"`);
+    for (const s of block.split(/(?<=[.!?]) +/)) {
+      const n = s.split(/\s+/).filter(Boolean).length;
+      if (n > 25) proseFaults.push(`${n} words: "${s.slice(0, 55)}"`);
+    }
+  }
+  eq('the page prose obeys the same language rules', proseFaults.join(' | '), '');
+
   eq('no console errors', consoleErrors.join(' | '), '');
 
   await browser.close();
