@@ -902,11 +902,15 @@ function measure(total){
     ded += Math.max(0, 6000 - 0.06 * Math.max(0, magi - st));
   }
 
+  const preferred = base > 0 ? (m.qdiv + m.ltg) * f : 0;
+  const taxable = Math.max(0, agi - ded);
+
   return {
     total: total,
     agi: agi,
     magi: magi,
-    taxable: Math.max(0, agi - ded),
+    taxable: taxable,
+    ordinary: Math.max(0, taxable - preferred),
     wages: Math.max(0, wage - hsa),
     amti: agi + a.iso,
     supplemental: supp,
@@ -1155,9 +1159,13 @@ function renderSummary(){
   const M = measure(S.income);
   const st = S.status;
 
-  const band = ORD[st].find(b => M.taxable >= b[0] && (b[1] === null || M.taxable < b[1]));
+  /* The rate on the next dollar of pay is read off ordinary income. The rate
+     on the next dollar of gain is read off total taxable income, because gain
+     stacks on top of everything else. */
+  const band = ORD[st].find(b => M.ordinary >= b[0] && (b[1] === null || M.ordinary < b[1]));
   const lt = LTG[st];
   const ltRate = M.taxable <= lt[0] ? '0%' : M.taxable <= lt[1] ? '15%' : '20%';
+  const nothingTaxed = M.taxable <= 0;
 
   /* Count what is happening to the reader right now. */
   let inside = 0, lost = 0, cliffs = 0;
@@ -1173,8 +1181,9 @@ function renderSummary(){
   }
 
   const cells = [
-    ['Marginal rate', band ? band[2] + '%' : '\u2014', 'on your next dollar of pay'],
-    ['Long-term gain', ltRate, 'on your next dollar of gain'],
+    ['Marginal rate', nothingTaxed ? '0%' : (band ? band[2] + '%' : '\u2014'),
+     nothingTaxed ? 'your deduction covers it all' : 'on your next dollar of pay'],
+    ['Long-term gain', nothingTaxed ? '0%' : ltRate, 'on your next dollar of gain'],
     ['Taxable income', fmt(M.taxable), 'after a ' + fmt(M.deduction) + ' deduction'],
     ['Phasing out', String(inside), inside === 1 ? 'benefit is shrinking now' : 'benefits are shrinking now'],
     ['Already gone', String(lost), lost === 1 ? 'benefit is fully phased out' : 'benefits are fully phased out'],
@@ -1479,7 +1488,8 @@ renderAll();
 if (!returning) openModal();
 window.__ts = { S:S, measure:measure, solve:solve, place:place, applies:applies,
                 movingEnd:movingEnd, acaCliff:acaCliff, limitFor:limitFor,
-                RULES:RULES, LIMITS:LIMITS, render:renderAll };
+                RULES:RULES, LIMITS:LIMITS, mixTotal:mixTotal,
+                render:function(){ writeControls(); renderAll(); } };
 /* Crossing the phone breakpoint changes which labels fit, so a resize has to
    redraw the rows and not only the ruler. Debounced, because a drag on a
    desktop window fires this continuously. */

@@ -156,6 +156,35 @@ function base(over) {
                 'return t.movingEnd(t.RULES.find(r=>r.id==="ctc_phaseout"), 200000)');
   eq('child credit edge for two children', e, 287000);
 
+  // Preferred income stacks on top of ordinary income, so a portfolio of pure
+  // long-term gain leaves the next dollar of PAY in the bottom bracket even
+  // though total taxable income is deep into the upper ones.
+  const gainsOnly = base({ top: { status: 'single', age: 40, children: 0, income: 400000 },
+                           mix: { wage: 0, bonus: 0, rsu: 0, int: 0, qdiv: 0, ltg: 400000, stg: 0, exempt: 0 } });
+  m = await ask(page, gainsOnly, 'return t.measure(400000)');
+  eq('all gain: taxable income is the whole lot', m.taxable, 383900);
+  eq('all gain: ordinary income is nothing', m.ordinary, 0);
+
+  // Mixed: $150,000 of pay and $100,000 of gain, so ordinary income is
+  // 250,000 - 16,100 - 100,000 = 133,900, which is the 24% band.
+  const mixed = base({ top: { status: 'single', age: 40, children: 0, income: 250000 },
+                       mix: { wage: 150000, bonus: 0, rsu: 0, int: 0, qdiv: 0, ltg: 100000, stg: 0, exempt: 0 } });
+  m = await ask(page, mixed, 'return t.measure(250000)');
+  eq('mixed: ordinary income excludes the gain', m.ordinary, 133900);
+
+  // A reader whose deduction covers everything owes nothing, and the panel
+  // must not claim they are in the 10% bracket.
+  const broke = await page.evaluate(() => {
+    const t = window.__ts;
+    t.S.status = 'single'; t.S.age = 40; t.S.children = 0; t.S.income = 9000;
+    t.S.mix = { wage: 9000, bonus: 0, rsu: 0, int: 0, qdiv: 0, ltg: 0, stg: 0, exempt: 0 };
+    t.S.adj = { k401: 0, hsa: 0, iso: 0 };
+    t.render();
+    return [...document.querySelectorAll('.stat')].slice(0, 2)
+      .map(s => s.querySelector('.v').textContent);
+  });
+  eq('below the deduction, the rate is zero', broke.join('/'), '0%/0%');
+
   // ------------------------------------------------------- the ACA cliff ---
   // 400% of the 2025 poverty guideline, which is what 2026 cover uses.
   eq('aca cliff, one person', await ask(page, base(), 'return t.acaCliff()'), 62600);
@@ -251,7 +280,7 @@ function base(over) {
     const t = window.__ts, bad = [];
     t.S.status = 'single'; t.S.age = 66; t.S.adj = { k401: 24500, hsa: 4400, iso: 20000 };
     t.S.mix = { wage: 100000, bonus: 20000, rsu: 30000, int: 2000, qdiv: 3000, ltg: 10000, stg: 1000, exempt: 5000 };
-    const names = ['agi', 'magi', 'taxable', 'wages', 'amti', 'supplemental', 'provisional'];
+    const names = ['agi', 'magi', 'taxable', 'ordinary', 'wages', 'amti', 'supplemental', 'provisional'];
     let prev = t.measure(0);
     for (let v = 5000; v <= 2000000; v += 5000) {
       const cur = t.measure(v);
