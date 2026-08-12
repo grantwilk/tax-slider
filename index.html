@@ -280,9 +280,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
   background-image:repeating-linear-gradient(135deg,
     currentColor 0 2px, transparent 2px 5px);
 }
-.legend .sw.no{
-  background:rgba(127,127,127,.12);box-shadow:inset 0 0 0 1px currentColor;
-}
 .legend .sw.on{opacity:.9}
 .legend .sw.here{background:transparent;border-left:3px solid var(--mark);width:12px}
 .chartwrap{
@@ -336,9 +333,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .seg.partial{box-shadow:inset 0 0 0 1px currentColor}
 .seg.partial .btxt{color:var(--ink)}
 /* An outline with almost nothing in it means you cannot have this. */
-.seg.no::before{opacity:.06}
-.seg.no{box-shadow:inset 0 0 0 1px currentColor}
-.seg.no .btxt{color:var(--muted)}
 /* A tax or a limit that has taken hold. */
 .seg.on::before{opacity:.9}
 .seg.on .btxt{color:var(--bar-ink)}
@@ -573,10 +567,10 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 
 <div class="legend" id="legend">
   <span class="lk"><i class="sw yes"></i>You get the whole thing</span>
-  <span class="lk"><i class="sw partial"></i>Reduced, and still falling</span>
-  <span class="lk"><i class="sw no"></i>Not open to you here</span>
+  <span class="lk"><i class="sw partial"></i>Reduced as your income rises</span>
   <span class="lk"><i class="sw on"></i>Applies at this income</span>
   <span class="lk"><i class="sw here"></i>Where you are now</span>
+  <span class="lk">Blank space means the rule does not reach you</span>
 </div>
 
 <div class="chartwrap">
@@ -719,28 +713,28 @@ const RULES = [
   {id:"niit", sec:"rates", t:"Net Investment Income Tax", m:"magi", shape:"open", o:30,
    e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
    st:"Investment tax",
-   sv:["No","Applies",null],
+   sv:[null,"Applies",null],
    sk:["no","on","on"],
    d:"A tax of 3.8 percent on investment income. It applies to the smaller of two amounts: your net investment income, or the amount of MAGI more than the threshold. MAGI is your adjusted gross income with a few items added back. The tax grows with that excess. It does not start at the full rate on the first dollar. The threshold was never raised for inflation, so more people cross it each year.",
    s:[["IRS: NIIT","https://www.irs.gov/individuals/net-investment-income-tax"]]},
   {id:"addl_medicare", sec:"rates", t:"Additional Medicare Tax", m:"wages", shape:"open", o:21,
    e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
    st:"Extra Medicare tax",
-   sv:["No","Applies",null],
+   sv:[null,"Applies",null],
    sk:["no","on","on"],
    d:"An extra 0.9 percent on wages more than the threshold. Only the excess is taxed. Your employer begins to take it from your pay at $200,000 from that employer. Your filing status does not change that point. A two- earner couple can therefore have too little taken, and can owe the tax when they file. A qualifying surviving spouse uses the $200,000 figure here, not the joint figure.",
    s:[["IRS: Additional Medicare Tax","https://www.irs.gov/businesses/small-businesses-self-employed/questions-and-answers-for-the-additional-medicare-tax"]]},
   {id:"ss_wage_base", sec:"rates", t:"Social Security wage base", m:"wages", shape:"band", o:20,
    e:{single:[0,184500],mfj:[0,184500],mfs:[0,184500],hoh:[0,184500]},
    st:"SS wage base",
-   sv:[null,"Taxed","No more tax"],
+   sv:[null,"Taxed",null],
    sk:["band","on","no"],
    d:"Social Security tax of 6.2 percent applies to wages up to this point. Wages more than this point pay none. The ceiling is per employer, not per person. If you change jobs during the year, both employers take the tax up to the full base. You then claim the excess as a credit.",
    s:[["SSA wage base","https://www.ssa.gov/oact/cola/cbb.html"]]},
   {id:"amt_phaseout", sec:"rates", t:"AMT exemption phase-out", m:"amti", shape:"phaseout", o:31,
    e:{single:[500000,680200],mfj:[1000000,1280400],mfs:[500000,640200],hoh:[500000,680200]},
    st:"AMT exemption",
-   sv:["Full exemption","Reduced","None"],
+   sv:["Full exemption","Reduced",null],
    sk:["yes","partial","no"],
    d:"The Alternative Minimum Tax is a second calculation that can raise what you owe. Its exemption shrinks by 50 cents for each dollar more than the start. The exemption reaches zero after a short range. The 2025 law moved the start down and doubled the rate from 25 percent. When you buy shares under an incentive stock option, the discount adds to this measure. That is why this matters most in the year you buy.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"],["IRC 55","https://www.law.cornell.edu/uscode/text/26/55"]]},
@@ -755,14 +749,14 @@ const RULES = [
   {id:"roth_ira", sec:"accounts", t:"Roth IRA phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[153000,168000],mfj:[242000,252000],mfs:[0,10000],hoh:[153000,168000]},
    st:"Roth IRA",
-   sv:["Full amount","Reduced","Not allowed"],
+   sv:["Full amount","Reduced",null],
    sk:["yes","partial","no"],
    d:"A Roth IRA takes money you already paid tax on, and the growth can be tax free later. After the start you can contribute less than the full amount. After the end you cannot contribute directly at all. Married filing separately runs from zero to $10,000. Almost nobody who files that way can contribute. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: Roth IRA limits","https://www.irs.gov/retirement-plans/roth-iras"]]},
   {id:"trad_ira_deduction", sec:"accounts", t:"IRA deduction phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[81000,91000],mfj:[129000,149000],mfs:[0,10000],hoh:[81000,91000]},
    st:"IRA deduction",
-   sv:["Full deduction","Reduced","None"],
+   sv:["Full deduction","Reduced",null],
    sk:["yes","partial","no"],
    d:"This range applies when a workplace retirement plan covers you. After the end you can still contribute, but you cannot deduct it. If no plan covers you, there is no income limit at all. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: IRA deduction limits","https://www.irs.gov/retirement-plans/ira-deduction-limits"]]},
@@ -777,14 +771,14 @@ const RULES = [
   {id:"hce", sec:"accounts", t:"Highly compensated employee", m:"priorwages", shape:"cliff", o:50,
    e:{single:[160000,null],mfj:[160000,null],mfs:[160000,null],hoh:[160000,null]},
    st:"Highly compensated",
-   sv:["No","Highly paid",null],
+   sv:[null,"Highly paid",null],
    sk:["no","on","on"],
    d:"If you earn more than this, your plan treats you as highly compensated. Testing rules can then cap your contribution. Some plans refund part of it after year end. The test reads last year’s pay.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
   {id:"savers_credit", sec:"accounts", t:"Saver’s Credit", m:"agi", shape:"step", o:50,
    e:{single:[0,40250],mfj:[0,80500],mfs:[0,40250],hoh:[0,60375]},
    st:"Saver’s Credit",
-   sv:["Credit","Less each step","None"],
+   sv:["Credit","Less each step",null],
    sk:["yes","partial","no"],
    d:"A credit worth 50, 20, or 10 percent of what you contribute to a retirement account, on the first $2,000. The rate drops in steps and does not slide. One dollar of extra income can therefore cut the credit sharply. The credit ends at the top of this band.",
    s:[["IRS: Saver’s Credit","https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-savers-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
@@ -807,7 +801,7 @@ const RULES = [
    e:{single:[75000,175000],mfj:[150000,250000],mfs:[null,null],hoh:[75000,175000]},
    st:"Senior deduction",
    ageMin:65,
-   sv:["Full $6,000","Reduced","None"],
+   sv:["Full $6,000","Reduced",null],
    sk:["yes","partial","no"],
    d:"A deduction of $6,000 for each person aged 65 or over. It is separate from the extra standard deduction for age. It falls by 6 cents for each dollar more than the start. A couple where both qualify get two of them, and both reach zero at the same income. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
@@ -815,7 +809,7 @@ const RULES = [
    e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
    st:"Tips deduction",
    needs:"tips",
-   sv:["Full deduction","Less each step","None"],
+   sv:["Full deduction","Less each step",null],
    sk:["yes","partial","no"],
    d:"Up to $25,000 of tip income is deductible. After the start it falls by $100 for each full $1,000 of income, so it drops in steps and does not slide. Where it reaches zero depends on how much you earned in tips. It does not depend on the cap. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
@@ -823,7 +817,7 @@ const RULES = [
    e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
    st:"Overtime deduction",
    needs:"overtime",
-   sv:["Full deduction","Less each step","None"],
+   sv:["Full deduction","Less each step",null],
    sk:["yes","partial","no"],
    d:"Up to $12,500 of overtime pay is deductible, or $25,000 on a joint return. It falls by $100 for each full $1,000 of income more than the start, in steps. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
@@ -831,14 +825,14 @@ const RULES = [
    e:{single:[100000,null],mfj:[200000,null],mfs:[null,null],hoh:[100000,null]},
    st:"Car loan interest",
    needs:"carloan",
-   sv:["Full deduction","Less each step","None"],
+   sv:["Full deduction","Less each step",null],
    sk:["yes","partial","no"],
    d:"Up to $10,000 of interest on a loan for a new car assembled in the United States. It falls by $200 for each $1,000 of income more than the start. This one rounds the income up rather than down, so you lose the deduction one step sooner. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
   {id:"student_loan_interest", sec:"deductions", t:"Student loan interest phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[85000,100000],mfj:[175000,205000],mfs:[null,null],hoh:[85000,100000]},
    st:"Student loan",
-   sv:["Full deduction","Reduced","None"],
+   sv:["Full deduction","Reduced",null],
    sk:["yes","partial","no"],
    d:"Up to $2,500 of student loan interest is deductible without itemizing. The deduction slides to zero across this range. Married filing separately cannot claim it at all.",
    s:[["IRS: student loan interest","https://www.irs.gov/taxtopics/tc456"]]},
@@ -853,21 +847,21 @@ const RULES = [
    e:{single:[200000,null],mfj:[400000,null],mfs:[200000,null],hoh:[200000,null]},
    st:"Child Tax Credit",
    needs:"children",
-   sv:["Full credit","Less each step","None"],
+   sv:["Full credit","Less each step",null],
    sk:["yes","partial","no"],
    d:"The credit is $2,200 for each qualifying child. After the start it falls by $50 for each $1,000 of income. Where the credit reaches zero depends on how many children you have. The end of this band therefore moves with your family, and it is not a fixed amount.",
    s:[["IRS: Child Tax Credit","https://www.irs.gov/credits-deductions/individuals/child-tax-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"education_credits", sec:"credits", t:"Education credits phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[80000,90000],mfj:[160000,180000],mfs:[null,null],hoh:[80000,90000]},
    st:"Education credits",
-   sv:["Full credit","Reduced","None"],
+   sv:["Full credit","Reduced",null],
    sk:["yes","partial","no"],
    d:"Both education credits use the same range. The American Opportunity credit is worth up to $2,500 per student and the Lifetime Learning credit up to $2,000 per return. Neither is available to a person who files separately.",
    s:[["IRS: education credits","https://www.irs.gov/credits-deductions/individuals/education-credits-aotc-llc"]]},
   {id:"adoption_credit", sec:"credits", t:"Adoption credit phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[265080,305080],mfj:[265080,305080],mfs:[265080,305080],hoh:[265080,305080]},
    st:"Adoption credit",
-   sv:["Full credit","Reduced","None"],
+   sv:["Full credit","Reduced",null],
    sk:["yes","partial","no"],
    d:"The credit is up to $17,670 for each child you adopt. Of that amount, $5,120 is refundable, so you can receive it even if you owe no tax. The credit slides to zero across this range.",
    s:[["IRS: adoption credit","https://www.irs.gov/taxtopics/tc607"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
@@ -905,7 +899,7 @@ const RULES = [
    e:{single:[62600,null],mfj:[62600,null],mfs:[62600,null],hoh:[62600,null]},
    st:"ACA cliff",
    needs:"ownplan",
-   sv:["Help available","No help",null],
+   sv:["Help available",null,null],
    sk:["yes","no",null],
    d:"This is the sharpest edge in the tax code, and it returned for 2026. If your income is less than 400 percent of the poverty level, you can get help to pay for a health plan you buy yourself. One dollar more and you get nothing. The 2025 law also removed the cap on repaying help you already received.",
    s:[["IRS: premium tax credit","https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics"],["HHS poverty guidelines","https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines"],["Rev. Proc. 2025-25","https://www.irs.gov/pub/irs-drop/rp-25-25.pdf"]]},
@@ -980,7 +974,7 @@ const RULES = [
   {id:"comp_limit", sec:"accounts", t:"Pay a plan can count", m:"wages", shape:"open", o:5,
    e:{single:[360000,null],mfj:[360000,null],mfs:[360000,null],hoh:[360000,null]},
    st:"Plan pay cap",
-   sv:["Pay counts","No longer counts",null],
+   sv:["Pay counts",null,null],
    sk:["yes","no",null],
    d:"A retirement plan cannot count pay of more than $360,000 for the year. Pay more than this earns no further employer match, and it does not raise a contribution that is set as a percent of pay. A person who earns more than this gets the whole match earlier in the year.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
@@ -1376,19 +1370,17 @@ function lanesFor(sec){
   for (const row of out){
     /* A lane whose every segment sits past the right edge has nothing to draw,
        and the reader still needs to know it is there. */
-    row.off = row.segs.every(g => g.lo > S.axis);
+    row.off = row.segs.length > 0 && row.segs.every(g => g.lo > S.axis);
+    row.blank = row.segs.length === 0;
     if (row.off) offscale++;
     row.segs.sort((a, b) => a.lo - b.lo);
-    if (row.lane && row.lane.gap && row.segs.length && row.segs[0].lo > 0)
-      row.segs.unshift({ lo:0, hi:row.segs[0].lo, label:row.lane.gap,
-                         kind:'no', id:row.rules[0].id });
     row.title = row.lane ? (narrow() ? row.lane.st : row.lane.t)
                          : labelOf(row.rules[0]);
     row.full = row.lane ? row.lane.t : row.rules[0].t;
     row.here = row.rules.some(r => { const p = place(r); return p && isHere(r, p); });
   }
   out.sort((a, b) => (a.o - b.o) || (a.lo - b.lo));
-  return { rows:out, offscale:offscale };
+  return { rows:out.filter(r => !r.blank), offscale:offscale };
 }
 
 function isHere(r, p){
@@ -1704,8 +1696,8 @@ function renderDetail(){
       'edges fall for you, and which document the figures come from.</p>' +
       '<p>Each row is one subject, and the blocks along it show what you get at ' +
       'each level of income. A solid block is the whole amount. A hatched block ' +
-      'is an amount that falls as your income rises. An empty block is an ' +
-      'amount you cannot have at that income.</p>';
+      'is an amount that falls as your income rises. Blank space means the rule ' +
+      'does not reach you at that income.</p>';
     return;
   }
   const lim = LIMITS.find(l => l.id === S.picked);

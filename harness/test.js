@@ -58,6 +58,9 @@ function base(over) {
   const consoleErrors = [];
   page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
+  page.on('response', r => {
+    if (r.status() >= 400) consoleErrors.push(`${r.status()} on ${r.url()}`);
+  });
 
   await page.goto(PAGE);
   await page.waitForFunction(() => window.__ts !== undefined);
@@ -455,7 +458,7 @@ function base(over) {
     const out = [];
     for (const el of document.querySelectorAll(
         '.hint, .detail p, .detail .where, .foot p, .modal p, .stat .n, '
-        + '#hiddenNote, .legend, .limgroup, .field .sub, .num .note, '
+        + '#hiddenNote, .legend .lk, .limgroup, .field .sub, .num .note, '
       + '.numbers .note, .empty, .sechead'))
       out.push(el.innerText.replace(/\s+/g, ' ').trim());
     return out.filter(Boolean);
@@ -680,16 +683,18 @@ function base(over) {
   const rothKinds = await page.locator('.seg[data-id="roth_ira"]').evaluateAll(
     els => els.map(e => e.className.replace('seg ', '') + ':' + e.textContent).join(' | '));
   ok('the Roth row shows the band you can use, not only the phase-out',
-     /yes:Full amount/.test(rothKinds) && /no:Not allowed/.test(rothKinds),
-     rothKinds, 'a full band, a reduced band, and a barred band');
+     /yes:Full amount/.test(rothKinds) && !/no:/.test(rothKinds),
+     rothKinds, 'a full band and a reduced band, and nothing past them');
 
   // A tax you do not owe must not look like a benefit you hold.
-  eq('a tax that has not reached you is drawn as empty',
+  // A tax you do not owe gets no block at all.
+  eq('a tax draws one block, where it applies',
+     await page.locator('.seg[data-id="niit"]').count(), 1);
+  eq('and that block is solid',
      await page.locator('.seg[data-id="niit"]').first().evaluate(e => e.className),
-     'seg no');
-  eq('a tax that has reached you is drawn as solid',
-     await page.locator('.seg[data-id="niit"]').last().evaluate(e => e.className),
      'seg on');
+  eq('no block is drawn for something you cannot have',
+     await page.locator('.seg.no').count(), 0);
 
   eq('the axis is fixed at one million',
      await page.evaluate(() => window.__ts.S.axis), 1000000);

@@ -661,6 +661,13 @@ KINDS = {
 for _r in RULES:
     if _r['id'] in KINDS: _r['kinds'] = KINDS[_r['id']]
 
+# Filling the line end to end told the reader nothing. Where a rule does not
+# reach you there is now blank space, which says the same thing and says it
+# without ink.
+for _r in RULES:
+    _r['states'] = tuple(None if k == 'no' else lab
+                         for lab, k in zip(_r['states'], _r['kinds']))
+
 # Why a rule is not drawn, phrased for the reader. The page shows these
 # instead of leaving a section silently empty.
 NEEDS_REASON = {
