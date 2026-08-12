@@ -82,6 +82,7 @@
 
   --bar-ink:#FFFFFF;
   --bar-edge:rgba(0,0,0,.30);
+  --chip:#E4E4E8;
   --row-tint:rgba(0,0,0,.045);
   --row-hot:rgba(0,0,0,.085);
   --shadow:rgba(26,27,32,.22);
@@ -104,7 +105,7 @@
     --mark:#FFFFFF; --mark-ink:#15161A;
     --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
     --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
-    --shadow:rgba(0,0,0,.55);
+    --shadow:rgba(0,0,0,.55); --chip:#333741;
   }
 }
 :root[data-theme="dark"]{
@@ -116,7 +117,7 @@
   --mark:#FFFFFF; --mark-ink:#15161A;
   --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
   --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
-  --shadow:rgba(0,0,0,.55);
+  --shadow:rgba(0,0,0,.55); --chip:#333741;
 }
 
 /* ============================ base ============================ */
@@ -252,12 +253,17 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 /* ============================ filters ============================ */
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}
 .filters button{
-  border:1px solid var(--grid-strong);background:var(--panel);border-radius:999px;
+  border:1px solid var(--grid-strong);background:var(--chip);border-radius:999px;
   padding:4px 11px;font-size:11.5px;font-weight:600;letter-spacing:.05em;
-  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;
+  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:6px;
 }
-.filters button .dot{width:9px;height:9px;border-radius:2px;background:currentColor}
-.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filters button .dot{width:9px;height:9px;border-radius:2px;background:var(--dot)}
+.filters button:hover{border-color:var(--muted)}
+/* Showing is the resting state, so hidden is the one that gets marked. */
+.filters button[aria-pressed="false"]{
+  background:transparent;color:var(--faint);border-style:dashed;
+}
+.filters button[aria-pressed="false"] .dot{opacity:.3}
 
 /* ============================ chart ============================ */
 .legend{
@@ -265,10 +271,19 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
   padding:7px 2px 9px;font-size:11.5px;color:var(--muted);
 }
 .legend .lk{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.legend .sw{width:26px;height:11px;border-radius:2px;background:var(--sec-rates);display:inline-block}
-.legend .sw.phaseout{-webkit-mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15));mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15))}
-.legend .sw.step{-webkit-mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px);mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px)}
-.legend .sw.cliff{background:transparent;border-left:4px solid var(--sec-rates);background-image:repeating-linear-gradient(135deg,var(--sec-rates) 0 2px,transparent 2px 6px)}
+.legend .sw{
+  width:26px;height:12px;border-radius:2px;display:inline-block;position:relative;
+  color:var(--sec-rates);background:currentColor;
+}
+.legend .sw.partial{
+  background:transparent;box-shadow:inset 0 0 0 1px currentColor;
+  background-image:repeating-linear-gradient(135deg,
+    currentColor 0 2px, transparent 2px 5px);
+}
+.legend .sw.no{
+  background:rgba(127,127,127,.12);box-shadow:inset 0 0 0 1px currentColor;
+}
+.legend .sw.on{opacity:.9}
 .legend .sw.here{background:transparent;border-left:3px solid var(--mark);width:12px}
 .chartwrap{
   border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
@@ -299,8 +314,38 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .row:hover{background:var(--row-hot)}
 .row.here .lab{box-shadow:inset 3px 0 0 var(--mark)}
 .row.here .lab .txt{font-weight:700}
-.row.here .bar{outline:1.5px solid var(--mark);outline-offset:1px}
-.row[aria-pressed="true"]{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
+.seg{
+  position:absolute;top:4px;bottom:4px;border:0;padding:0;background:transparent;
+  display:flex;align-items:center;overflow:hidden;cursor:pointer;
+  border-radius:3px;color:inherit;
+}
+.seg::before{content:'';position:absolute;inset:0;border-radius:3px;
+             background:currentColor}
+.seg .btxt{
+  position:relative;z-index:1;padding:0 6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.02em;white-space:nowrap;overflow:hidden;
+}
+/* Solid means you have the whole thing, or it is a plain band. */
+.seg.yes .btxt, .seg.band .btxt{color:var(--bar-ink)}
+/* Hatched means it is on the way down. Only the pattern is dimmed. */
+.seg.partial::before{
+  opacity:.2;
+  background-image:repeating-linear-gradient(135deg,
+    var(--paper) 0 2px, transparent 2px 5px);
+}
+.seg.partial{box-shadow:inset 0 0 0 1px currentColor}
+.seg.partial .btxt{color:var(--ink)}
+/* An outline with almost nothing in it means you cannot have this. */
+.seg.no::before{opacity:.06}
+.seg.no{box-shadow:inset 0 0 0 1px currentColor}
+.seg.no .btxt{color:var(--muted)}
+/* A tax or a limit that has taken hold. */
+.seg.on::before{opacity:.9}
+.seg.on .btxt{color:var(--bar-ink)}
+.seg:hover::before{opacity:1}
+.seg:hover .btxt{color:var(--bar-ink)}
+.seg[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel), 0 0 0 3.5px currentColor}
+.row.on{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
 .row .lab{
   width:var(--label-w);flex:0 0 var(--label-w);padding:0 9px 0 10px;
   display:flex;align-items:center;gap:6px;border-right:1px solid var(--grid-strong);
@@ -313,35 +358,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 }
 .row.off .lab .txt{color:var(--faint)}
 .row .plot{position:relative;flex:1 1 auto}
-.bar{
-  position:absolute;top:5px;bottom:5px;border-radius:3px;min-width:2px;
-  background:currentColor;
-}
-.bar .btxt{
-  position:absolute;inset:0;display:flex;align-items:center;padding:0 6px;
-  font-size:11px;font-weight:700;color:var(--bar-ink);white-space:nowrap;overflow:hidden;
-}
-/* Shape language. A reader should be able to tell what kind of edge it is
-   without opening anything: solid means a fixed band, a fade means the value
-   slides away, a staircase means it drops in jumps, and a thick left rule
-   means one dollar changes the answer. */
-.bar.open{
-  -webkit-mask-image:linear-gradient(to right,#000 78%,transparent 100%);
-          mask-image:linear-gradient(to right,#000 78%,transparent 100%);
-}
-.bar.phaseout{
-  -webkit-mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
-          mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
-}
-.bar.step{
-  -webkit-mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
-          mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
-}
-.bar.cliff{
-  border-left:4px solid currentColor;background:transparent;
-  background-image:repeating-linear-gradient(135deg,currentColor 0 2px,transparent 2px 6px);
-  opacity:.9;
-}
 .mark{
   position:absolute;top:0;bottom:0;width:2px;background:var(--mark);z-index:5;
   pointer-events:none;
@@ -360,6 +376,10 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .sechead .n{color:var(--faint);font-weight:400;letter-spacing:.02em;text-transform:none}
 .empty{padding:22px 14px;color:var(--faint);font-size:13.5px}
 
+.btxt.away{
+  position:absolute;right:8px;top:0;bottom:0;display:flex;align-items:center;
+  font-size:10.5px;color:var(--faint);
+}
 /* ============================ detail ============================ */
 .hidden-note{
   font-size:12.5px;color:var(--faint);margin:9px 2px 0;max-width:78ch;
@@ -483,15 +503,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
       <label for="children">Children under 17</label>
       <input id="children" type="number" min="0" max="12" step="1" value="0">
     </div>
-    <div class="field">
-      <label for="axis">Show income up to</label>
-      <select id="axis">
-        <option value="250000">$250,000</option>
-        <option value="500000">$500,000</option>
-        <option value="1000000">$1,000,000</option>
-        <option value="1500000">$1,500,000</option>
-      </select>
-    </div>
   </div>
 
   <div class="sliderwrap">
@@ -561,11 +572,11 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 <nav class="filters" id="filters" aria-label="Sections"></nav>
 
 <div class="legend" id="legend">
-  <span class="lk"><i class="sw band"></i>Fixed range</span>
-  <span class="lk"><i class="sw phaseout"></i>Gets smaller</span>
-  <span class="lk"><i class="sw step"></i>Drops in steps</span>
-  <span class="lk"><i class="sw cliff"></i>Hard edge</span>
-  <span class="lk"><i class="sw here"></i>Applies to you now</span>
+  <span class="lk"><i class="sw yes"></i>You get the whole thing</span>
+  <span class="lk"><i class="sw partial"></i>Reduced, and still falling</span>
+  <span class="lk"><i class="sw no"></i>Not open to you here</span>
+  <span class="lk"><i class="sw on"></i>Applies at this income</span>
+  <span class="lk"><i class="sw here"></i>Where you are now</span>
 </div>
 
 <div class="chartwrap">
@@ -639,12 +650,15 @@ const narrow = () => window.innerWidth <= 720;
 const labelOf = r => (narrow() && r.st) ? r.st : r.t;
 const secName = s => narrow() ? SEC_SHORT[s] : SEC_NAME[s];
 const AXIS_MIN = 0;
+/* Fixed. Segments span the whole line now, so a row stays readable even when
+   its edges cluster at the left of a wide axis. */
+const AXIS_TOP = 1000000;
 const STATUS_NAME = { single:'single', mfj:'jointly', mfs:'separately',
                       hoh:'as head of household' };
 
 /* ============================== the state ============================== */
 const S = {
-  status:'single', age:35, children:0, axis:250000, income:120000,
+  status:'single', age:35, children:0, axis:AXIS_TOP, income:120000,
   mix:{ wage:120000, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 },
   adj:{ k401:0, hsa:0, iso:0 },
   oth:{ tips:0, ot:0, car:0, ss:0, hdhp:false, own:false },
@@ -658,6 +672,7 @@ function load(){
     if(!raw) return false;
     const p = JSON.parse(raw);
     Object.assign(S, p);
+    S.axis = AXIS_TOP;
     S.mix = Object.assign(S.mix, p.mix||{});
     S.adj = Object.assign(S.adj, p.adj||{});
     S.oth = Object.assign(S.oth, p.oth||{});
@@ -876,6 +891,81 @@ function tickStep(){
        : span <= 1000000 ? 100000 : 250000;
 }
 
+/* What the reader has at each point along the axis, for one rule. A phase-out
+   used to be drawn as the window in which the benefit shrinks, which answered
+   a question nobody asks. These segments answer "can I have this, and how
+   much", which is the question the page exists for. */
+function segmentsFor(rule, p){
+  const [before, inside, after] = rule.sv || [null, null, null];
+  const [kBefore, kInside, kAfter] = rule.sk || ['band', 'band', 'band'];
+  const segs = [];
+
+  /* A rule in a lane is one segment of a shared row and carries only its own
+     range, because its neighbours cover the rest of the line. */
+  if (rule.lane){
+    segs.push({ lo:p.lo, hi:p.hi, label:rule.sg || inside || rule.t,
+                kind:'band', id:rule.id });
+    return segs;
+  }
+
+  if (before && p.lo > 0)
+    segs.push({ lo:0, hi:p.lo, label:before, kind:kBefore, id:rule.id });
+
+  if (p.hi === null){
+    if (inside) segs.push({ lo:p.lo, hi:null, label:inside, kind:kInside, id:rule.id });
+  } else {
+    if (inside) segs.push({ lo:p.lo, hi:p.hi, label:inside, kind:kInside, id:rule.id });
+    if (after)  segs.push({ lo:p.hi, hi:null, label:after, kind:kAfter, id:rule.id });
+  }
+  if (!segs.length)
+    segs.push({ lo:p.lo, hi:p.hi, label:rule.sg || rule.t, kind:'band', id:rule.id });
+  return segs;
+}
+
+/* Rows, in order, each holding the segments of one lane. */
+function lanesFor(sec){
+  const rows = new Map();
+  let offscale = 0;
+
+  for (const r of RULES){
+    if (r.sec !== sec || !applies(r)) continue;
+    const p = place(r);
+    if (!p) continue;
+    if (S.only && !inTally(r, p, S.only)) continue;
+    const key = r.lane || r.id;
+    if (!rows.has(key))
+      rows.set(key, { key:key, lane:r.lane ? LANES[r.lane] : null,
+                      rules:[], segs:[], o:r.lane ? LANES[r.lane].o : r.o, lo:p.lo });
+    const row = rows.get(key);
+    row.rules.push(r);
+    row.lo = Math.min(row.lo, p.lo);
+    for (const g of segmentsFor(r, p)) row.segs.push(g);
+  }
+
+  const out = [...rows.values()];
+  for (const row of out){
+    /* A lane whose every segment sits past the right edge has nothing to draw,
+       and the reader still needs to know it is there. */
+    row.off = row.segs.every(g => g.lo > S.axis);
+    if (row.off) offscale++;
+    row.segs.sort((a, b) => a.lo - b.lo);
+    if (row.lane && row.lane.gap && row.segs.length && row.segs[0].lo > 0)
+      row.segs.unshift({ lo:0, hi:row.segs[0].lo, label:row.lane.gap,
+                         kind:'no', id:row.rules[0].id });
+    row.title = row.lane ? (narrow() ? row.lane.st : row.lane.t)
+                         : labelOf(row.rules[0]);
+    row.full = row.lane ? row.lane.t : row.rules[0].t;
+    row.here = row.rules.some(r => { const p = place(r); return p && isHere(r, p); });
+  }
+  out.sort((a, b) => (a.o - b.o) || (a.lo - b.lo));
+  return { rows:out, offscale:offscale };
+}
+
+function isHere(r, p){
+  const w = standing(p, r.shape);
+  return w === 'inside' || (r.shape === 'cliff' && w === 'above');
+}
+
 function renderChart(){
   const track = $('track');
   track.textContent = '';
@@ -883,71 +973,64 @@ function renderChart(){
 
   for (const sec of SEC){
     if (S.off[sec]) continue;
-    const rules = RULES.filter(r => r.sec === sec && applies(r));
-    const placed = [];
-    for (const r of rules){
-      const p = place(r);
-      if (!p) continue;
-      if (S.only && !inTally(r, p, S.only)) continue;
-      placed.push({ r:r, p:p });
-    }
-    if (!placed.length) continue;
-    placed.sort((a, b) => (a.r.o - b.r.o) || (a.p.lo - b.p.lo));
+    const built = lanesFor(sec);
+    if (!built.rows.length) continue;
+    hiddenOff += built.offscale;
 
     const h = document.createElement('div');
     h.className = 'sechead';
     h.style.color = 'var(--sec-' + sec + ')';
     h.innerHTML = '<span>' + secName(sec) + '</span><span class="n">' +
-      placed.length + (placed.length === 1 ? ' rule' : ' rules') + '</span>';
+      built.rows.length + (built.rows.length === 1 ? ' row' : ' rows') + '</span>';
     track.appendChild(h);
 
-    for (const item of placed){
-      const r = item.r, p = item.p;
-      const offscale = p.lo > S.axis;
-      if (offscale) hiddenOff++;
+    for (const row of built.rows){
       shown++;
-
-      const row = document.createElement('button');
-      row.type = 'button';
-      const where = standing(p, r.shape);
-      const isHere = where === 'inside' ||
-                     (r.shape === 'cliff' && where === 'above');
-      row.className = 'row' + (offscale ? ' off' : '') + (isHere ? ' here' : '');
-      row.style.color = 'var(--sec-' + sec + ')';
-      row.setAttribute('aria-pressed', S.picked === r.id ? 'true' : 'false');
-      row.dataset.id = r.id;
+      const picked = row.rules.some(r => r.id === S.picked);
+      const div = document.createElement('div');
+      div.className = 'row' + (row.off ? ' off' : '') + (row.here ? ' here' : '') +
+                      (picked ? ' on' : '');
+      div.style.color = 'var(--sec-' + sec + ')';
 
       const lab = document.createElement('div');
       lab.className = 'lab';
       lab.innerHTML = '<span class="dot"></span><span class="txt"></span>';
-      lab.querySelector('.txt').textContent = labelOf(r);
-      lab.title = r.t;
-      row.appendChild(lab);
+      lab.querySelector('.txt').textContent = row.title;
+      lab.title = row.full;
+      div.appendChild(lab);
 
       const plot = document.createElement('div');
       plot.className = 'plot';
-      if (!offscale){
-        const bar = document.createElement('div');
-        bar.className = 'bar ' + r.shape;
-        const left = xOf(p.lo);
-        const right = p.hi === null ? 100 : xOf(p.hi);
-        bar.style.left = left + '%';
-        bar.style.width = Math.max(0.35, right - left) + '%';
-        const t = document.createElement('span');
-        t.className = 'btxt';
-        t.textContent = p.hi === null ? fmtShort(p.lo) + ' and up'
-                                      : fmtShort(p.lo) + '\u2013' + fmtShort(p.hi);
-        bar.appendChild(t);
-        plot.appendChild(bar);
+
+      if (row.off){
+        const s = document.createElement('span');
+        s.className = 'btxt away';
+        s.textContent = 'starts at ' + fmtShort(row.lo);
+        plot.appendChild(s);
       } else {
-        const t = document.createElement('span');
-        t.className = 'btxt';
-        t.style.cssText = 'position:absolute;right:6px;top:0;bottom:0;color:var(--faint)';
-        t.textContent = 'starts at ' + fmtShort(p.lo);
-        plot.appendChild(t);
+        for (const g of row.segs){
+          if (g.lo > S.axis) continue;
+          const left = xOf(g.lo);
+          const right = g.hi === null ? 100 : xOf(g.hi);
+          if (right - left < 0.15) continue;
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'seg ' + g.kind + (S.picked === g.id ? ' on' : '');
+          b.dataset.id = g.id;
+          b.style.left = left + '%';
+          b.style.width = (right - left) + '%';
+          b.setAttribute('aria-pressed', S.picked === g.id ? 'true' : 'false');
+          const rule = RULES.find(x => x.id === g.id);
+          b.title = rule ? rule.t + ' \u00b7 ' + g.label : g.label;
+          const sp = document.createElement('span');
+          sp.className = 'btxt';
+          sp.textContent = g.label;
+          b.appendChild(sp);
+          plot.appendChild(b);
+        }
       }
-      row.appendChild(plot);
-      track.appendChild(row);
+      div.appendChild(plot);
+      track.appendChild(div);
     }
   }
 
@@ -974,8 +1057,9 @@ function renderChart(){
   renderHidden(hiddenOff);
 
   /* A caption that does not fit is worse than no caption, so measure once the
-     bars are laid out and drop the ones that would be clipped. */
-  for (const t2 of track.querySelectorAll('.bar .btxt')){
+     segments are laid out and drop the ones that would be clipped. A $1m axis
+     puts several bracket edges inside a few pixels of each other. */
+  for (const t2 of track.querySelectorAll('.seg .btxt')){
     if (t2.scrollWidth > t2.clientWidth + 1) t2.remove();
   }
 
@@ -1032,25 +1116,13 @@ function renderHidden(offscale){
                     (statusHidden === 1 ? ' rule does' : ' rules do') +
                     ' not exist for your filing status.');
   if (offscale){
-    parts.push(offscale + (offscale === 1 ? ' rule starts' : ' rules start') +
-               ' past the right edge of the chart.');
+    parts.push(offscale + (offscale === 1 ? ' row starts' : ' rows start') +
+               ' past $1m, which is the right edge of the chart.');
   }
 
   el.textContent = '';
   if (!parts.length) return;
   el.append(parts.join(' ') + ' ');
-  if (offscale && S.axis < 1500000){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = 'Show more income';
-    b.addEventListener('click', () => {
-      S.axis = S.axis < 500000 ? 500000 : S.axis < 1000000 ? 1000000 : 1500000;
-      $('axis').value = String(S.axis);
-      $('income').max = String(S.axis);
-      bump();
-    });
-    el.appendChild(b);
-  }
 }
 
 function renderMarkerCap(){
@@ -1174,13 +1246,15 @@ function renderFilters(){
   const f = $('filters');
   f.textContent = '';
   for (const sec of SEC){
-    const n = RULES.filter(r => r.sec === sec && applies(r)).length;
+    const n = new Set(RULES.filter(r => r.sec === sec && applies(r))
+                           .map(r => r.lane || r.id)).size;
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.sec = sec;
-    b.style.color = S.off[sec] ? '' : 'var(--sec-' + sec + ')';
+    b.style.setProperty('--dot', 'var(--sec-' + sec + ')');
     b.setAttribute('aria-pressed', S.off[sec] ? 'false' : 'true');
     b.innerHTML = '<span class="dot"></span>' + secName(sec) + ' ' + n;
+    b.title = n + (n === 1 ? ' row' : ' rows') + ' in this section';
     f.appendChild(b);
   }
 }
@@ -1195,13 +1269,13 @@ const WHERE = {
 function renderDetail(){
   const d = $('detail');
   if (!S.picked){
-    d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any row</h3>' +
-      '<p>Select a bar on the chart. You can then read what it is, where its ' +
+    d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any block</h3>' +
+      '<p>Select a block on the chart. You can then read what it is, where its ' +
       'edges fall for you, and which document the figures come from.</p>' +
-      '<p>The shape of a bar tells you what kind of edge it is. A solid bar is ' +
-      'a fixed range. A bar that fades is a benefit that gets smaller as your ' +
-      'income rises. A staircase drops in steps. A hatched bar with a hard ' +
-      'left edge is a cliff, where one dollar changes the answer.</p>';
+      '<p>Each row is one subject, and the blocks along it show what you get at ' +
+      'each level of income. A solid block is the whole amount. A hatched block ' +
+      'is an amount that falls as your income rises. An empty block is an ' +
+      'amount you cannot have at that income.</p>';
     return;
   }
   const lim = LIMITS.find(l => l.id === S.picked);
@@ -1325,7 +1399,7 @@ function writeMix(){
 }
 function writeControls(){
   $('status').value = S.status; $('age').value = S.age;
-  $('children').value = S.children; $('axis').value = String(S.axis);
+  $('children').value = S.children;
   $('income').max = String(S.axis);
   $('income').value = String(Math.min(S.income, S.axis));
   $('a401k').value = S.adj.k401; $('aHsa').value = S.adj.hsa; $('aIso').value = S.adj.iso;
@@ -1335,9 +1409,6 @@ function writeControls(){
   writeMix();
 }
 
-function pickAxis(v){
-  return v <= 200000 ? 250000 : v <= 420000 ? 500000 : v <= 850000 ? 1000000 : 1500000;
-}
 
 function bump(){ save(); renderAll(); }
 
@@ -1354,18 +1425,11 @@ $('income').addEventListener('input', e => {
 $('status').addEventListener('change', e => { S.status = e.target.value; bump(); });
 $('age').addEventListener('input', e => { S.age = Math.max(0, +e.target.value || 0); bump(); });
 $('children').addEventListener('input', e => { S.children = Math.max(0, +e.target.value || 0); bump(); });
-$('axis').addEventListener('change', e => {
-  S.axis = +e.target.value;
-  $('income').max = String(S.axis);
-  if (S.income > S.axis){ S.income = S.axis; $('income').value = String(S.axis); }
-  bump();
-});
 
 for (const id of ['mWage','mBonus','mRsu','mInt','mQdiv','mLtg','mStg','mExempt']){
   $(id).addEventListener('input', () => {
     readMix();
     S.income = mixTotal();
-    if (S.income > S.axis){ S.axis = pickAxis(S.income); }
     $('axis').value = String(S.axis);
     $('income').max = String(S.axis);
     $('income').value = String(S.income);
@@ -1404,9 +1468,9 @@ $('filters').addEventListener('click', e => {
   bump();
 });
 $('track').addEventListener('click', e => {
-  const row = e.target.closest('.row');
-  if (!row) return;
-  S.picked = S.picked === row.dataset.id ? null : row.dataset.id;
+  const seg = e.target.closest('.seg');
+  if (!seg) return;
+  S.picked = S.picked === seg.dataset.id ? null : seg.dataset.id;
   bump();
   if (S.picked) $('detail').scrollIntoView({ block:'nearest', behavior:'smooth' });
 });
@@ -1445,7 +1509,6 @@ $('mGo').addEventListener('click', () => {
   S.status = $('mStatus').value;
   S.age = Math.max(0, +$('mAge').value || 0);
   S.income = Math.max(0, +$('mIncome').value || 0);
-  S.axis = pickAxis(S.income);
   S.mix = { wage:S.income, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 };
   $('scrim').hidden = true;
   writeControls();

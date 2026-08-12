@@ -77,12 +77,46 @@ def by(single, mfj, mfs, hoh):
 def flat(v):
     return {k: v for k in STATUSES}
 
+# ---------------------------------------------------------------- lanes ---
+# One row of the chart. Rules in the same lane never overlap, so they sit on a
+# single line as segments. A lane of one is just an ordinary row.
+LANES = {
+ 'ordinary': dict(section='rates', title='Federal tax brackets',
+                  short='Tax brackets', order=0, gap='No tax'),
+ 'ltcg':     dict(section='rates', title='Long-term gain bands',
+                  short='Gain bands', order=1, gap='No tax'),
+ 'irmaa':    dict(section='health', title='Medicare surcharge',
+                  short='Medicare', order=40, gap='No surcharge'),
+ 'care':     dict(section='credits', title='Care credit rate',
+                  short='Care credit', order=10, gap=None),
+}
+
 # ------------------------------------------------------------------ rules ---
 
 RULES = []
 
+DEFAULT_STATES = {
+ 'band':     (None, None, None),
+ 'open':     ('No', 'Yes', None),
+ 'phaseout': ('Full', 'Reduced', 'None'),
+ 'step':     ('Full', 'Less each step', 'None'),
+ 'cliff':    ('Yes', 'No', None),
+}
+
+# yes = you have the whole thing. partial = it is shrinking. on = it is in
+# force. no = you do not have it. Read left to right: before, inside, after.
+DEFAULT_KINDS = {
+ 'band':     ('band', 'band', 'band'),
+ 'open':     ('no', 'on', 'on'),
+ 'phaseout': ('yes', 'partial', 'no'),
+ 'step':     ('yes', 'partial', 'no'),
+ 'cliff':    ('no', 'on', 'on'),
+}
+
 def rule(**kw):
     kw.setdefault('order', 50)
+    kw.setdefault('states', DEFAULT_STATES[kw['shape']])
+    kw.setdefault('kinds', DEFAULT_KINDS[kw['shape']])
     RULES.append(kw)
 
 # ---- section: rates --------------------------------------------------------
@@ -101,6 +135,7 @@ ORDINARY = {
 for i, pct in enumerate([10, 12, 22, 24, 32, 35, 37]):
     rule(
       id='bracket_%d' % pct, section='rates', title='%d%% bracket' % pct, order=i,
+      lane='ordinary', seg='%d%%' % pct, states=(None, None, None),
       measure='taxable', shape='open' if pct == 37 else 'band',
       edges={st: (ORDINARY[st][i][0], ORDINARY[st][i][1]) for st in STATUSES},
       d=('A band is a range of income. This rate applies only to the income '
@@ -560,6 +595,72 @@ for _r in RULES:
     if _r['id'] in SHORT:
         _r['short'] = SHORT[_r['id']]
 
+# Lane membership and the wording of each segment, kept in one table so the
+# chart reads the same way for every rule.
+SEGMENTS = {
+ 'ltcg_0': dict(lane='ltcg', seg='0%', states=(None, None, None)),
+ 'ltcg_15': dict(lane='ltcg', seg='15%', states=(None, None, None)),
+ 'ltcg_20': dict(lane='ltcg', seg='20%', states=(None, None, None)),
+ 'irmaa_1': dict(lane='irmaa', seg='Tier 1', states=(None, 'Tier 1', None)),
+ 'irmaa_2': dict(lane='irmaa', seg='Tier 2', states=(None, 'Tier 2', None)),
+ 'irmaa_3': dict(lane='irmaa', seg='Tier 3', states=(None, 'Tier 3', None)),
+ 'irmaa_4': dict(lane='irmaa', seg='Tier 4', states=(None, 'Tier 4', None)),
+ 'irmaa_5': dict(lane='irmaa', seg='Tier 5', states=(None, 'Tier 5', None)),
+ 'cdcc_rate': dict(lane='care', seg='50 to 35%', states=(None, '50 to 35%', None)),
+ 'cdcc_rate_2': dict(lane='care', seg='35 to 20%', states=(None, '35 to 20%', None)),
+ 'roth_ira': dict(states=('Full amount', 'Reduced', 'Not allowed')),
+ 'trad_ira_deduction': dict(states=('Full deduction', 'Reduced', 'None')),
+ 'student_loan_interest': dict(states=('Full deduction', 'Reduced', 'None')),
+ 'education_credits': dict(states=('Full credit', 'Reduced', 'None')),
+ 'adoption_credit': dict(states=('Full credit', 'Reduced', 'None')),
+ 'ctc_phaseout': dict(states=('Full credit', 'Less each step', 'None')),
+ 'savers_credit': dict(states=('Credit', 'Less each step', 'None')),
+ 'senior_deduction': dict(states=('Full $6,000', 'Reduced', 'None')),
+ 'tips_deduction': dict(states=('Full deduction', 'Less each step', 'None')),
+ 'overtime_deduction': dict(states=('Full deduction', 'Less each step', 'None')),
+ 'car_loan_deduction': dict(states=('Full deduction', 'Less each step', 'None')),
+ 'amt_phaseout': dict(states=('Full exemption', 'Reduced', 'None')),
+ 'salt_phasedown': dict(states=('Full $40,400', 'Less each step', '$10,000 floor')),
+ 'qbi_phasein': dict(states=('No limit', 'Limits arrive', 'Limits apply')),
+ 'niit': dict(states=('No', 'Applies', None)),
+ 'addl_medicare': dict(states=('No', 'Applies', None)),
+ 'ss_wage_base': dict(states=(None, 'Taxed', 'No more tax')),
+ 'supplemental_million': dict(states=('22%', '37%', None)),
+ 'itemized_top_limit': dict(states=('No limit', 'Limit applies', None)),
+ 'comp_limit': dict(states=('Pay counts', 'No longer counts', None)),
+ 'amt_rate_step': dict(states=('26%', '28%', None)),
+ 'estimated_110': dict(states=('100% is enough', '110% needed', None)),
+ 'ss_earnings_test': dict(states=('Keep it all', 'Part withheld', None)),
+ 'roth_catch_up': dict(states=('Either kind', 'Roth only', None)),
+ 'hce': dict(states=('No', 'Highly paid', None)),
+ 'aca_cliff': dict(states=('Help available', 'No help', None)),
+ 'ss_benefit_tax': dict(states=('None taxed', 'Up to 50%', 'Up to 85%')),
+ 'ss_benefit_tax_mfs': dict(states=(None, 'Up to 85%', None)),
+}
+
+for _r in RULES:
+    _r.update(SEGMENTS.get(_r['id'], {}))
+
+# Where a fill would otherwise read the wrong way round.
+KINDS = {
+ 'aca_cliff': ('yes', 'no', None),
+ 'ss_wage_base': ('band', 'on', 'no'),
+ 'supplemental_million': ('band', 'on', None),
+ 'amt_rate_step': ('band', 'on', None),
+ 'estimated_110': ('yes', 'on', None),
+ 'ss_earnings_test': ('yes', 'on', None),
+ 'comp_limit': ('yes', 'no', None),
+ 'itemized_top_limit': ('yes', 'on', None),
+ 'roth_catch_up': ('yes', 'on', None),
+ 'qbi_phasein': ('yes', 'partial', 'on'),
+ 'salt_phasedown': ('yes', 'partial', 'on'),
+ 'ss_benefit_tax': ('yes', 'partial', 'on'),
+ 'ss_benefit_tax_mfs': (None, 'on', None),
+}
+
+for _r in RULES:
+    if _r['id'] in KINDS: _r['kinds'] = KINDS[_r['id']]
+
 # Why a rule is not drawn, phrased for the reader. The page shows these
 # instead of leaving a section silently empty.
 NEEDS_REASON = {
@@ -594,9 +695,20 @@ def emit():
         if r.get('age_max'): out.append('   ageMax:%d,' % r['age_max'])
         if r.get('needs'):   out.append('   needs:%s,' % js(r['needs']))
         if r.get('floor'):   out.append('   floor:true,')
+        if r.get('lane'):    out.append('   lane:%s,' % js(r['lane']))
+        if r.get('seg'):     out.append('   sg:%s,' % js(r['seg']))
+        out.append('   sv:[%s],' % ','.join(js(x) for x in r['states']))
+        out.append('   sk:[%s],' % ','.join(js(x) for x in r['kinds']))
         out.append('   d:%s,' % js(r['d']))
         out.append('   s:[%s]},' % ','.join('[%s,%s]' % (js(a), js(b)) for a, b in r['s']))
     out.append('];')
+    out.append('')
+    out.append('const LANES = {')
+    for lid, l in LANES.items():
+        out.append('  %s:{t:%s, st:%s, sec:%s, o:%d, gap:%s},'
+                   % (lid, js(l['title']), js(l['short']), js(l['section']),
+                      l['order'], js(l['gap'])))
+    out.append('};')
     out.append('')
     out.append('const NEEDS_REASON = {%s};'
                % ','.join('%s:%s' % (js(k), js(v))
@@ -668,13 +780,17 @@ def language_problems(where, text):
     return out
 
 RULE_KEYS = {'id','section','title','measure','shape','edges','d','s','order',
-             'age_min','age_max','needs','short','floor'}
+             'age_min','age_max','needs','short','floor','lane','seg','states','kinds'}
 LIMIT_KEYS = {'id','title','base','catch','d','s','ageMin','needs','group'}
 
 def check():
     bad = []
     for r in RULES:
         bad += language_problems('rule ' + r['id'], r['d'])
+        for lab in list(r['states']) + [r.get('seg')]:
+            if lab:
+                bad += [b for b in language_problems('label ' + r['id'], lab)
+                        if 'sentence of' not in b]
         bad += [b for b in language_problems('title ' + r['id'], r['title'])
                 if 'sentence of' not in b]
         if r.get('short'):

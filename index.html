@@ -82,6 +82,7 @@
 
   --bar-ink:#FFFFFF;
   --bar-edge:rgba(0,0,0,.30);
+  --chip:#E4E4E8;
   --row-tint:rgba(0,0,0,.045);
   --row-hot:rgba(0,0,0,.085);
   --shadow:rgba(26,27,32,.22);
@@ -104,7 +105,7 @@
     --mark:#FFFFFF; --mark-ink:#15161A;
     --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
     --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
-    --shadow:rgba(0,0,0,.55);
+    --shadow:rgba(0,0,0,.55); --chip:#333741;
   }
 }
 :root[data-theme="dark"]{
@@ -116,7 +117,7 @@
   --mark:#FFFFFF; --mark-ink:#15161A;
   --bar-ink:#121317; --bar-edge:rgba(0,0,0,.45);
   --row-tint:rgba(255,255,255,.055); --row-hot:rgba(255,255,255,.10);
-  --shadow:rgba(0,0,0,.55);
+  --shadow:rgba(0,0,0,.55); --chip:#333741;
 }
 
 /* ============================ base ============================ */
@@ -252,12 +253,17 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 /* ============================ filters ============================ */
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}
 .filters button{
-  border:1px solid var(--grid-strong);background:var(--panel);border-radius:999px;
+  border:1px solid var(--grid-strong);background:var(--chip);border-radius:999px;
   padding:4px 11px;font-size:11.5px;font-weight:600;letter-spacing:.05em;
-  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;
+  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:6px;
 }
-.filters button .dot{width:9px;height:9px;border-radius:2px;background:currentColor}
-.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filters button .dot{width:9px;height:9px;border-radius:2px;background:var(--dot)}
+.filters button:hover{border-color:var(--muted)}
+/* Showing is the resting state, so hidden is the one that gets marked. */
+.filters button[aria-pressed="false"]{
+  background:transparent;color:var(--faint);border-style:dashed;
+}
+.filters button[aria-pressed="false"] .dot{opacity:.3}
 
 /* ============================ chart ============================ */
 .legend{
@@ -265,10 +271,19 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
   padding:7px 2px 9px;font-size:11.5px;color:var(--muted);
 }
 .legend .lk{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.legend .sw{width:26px;height:11px;border-radius:2px;background:var(--sec-rates);display:inline-block}
-.legend .sw.phaseout{-webkit-mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15));mask-image:linear-gradient(to right,#000,rgba(0,0,0,.15))}
-.legend .sw.step{-webkit-mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px);mask-image:repeating-linear-gradient(to right,#000 0 4px,rgba(0,0,0,.3) 4px 8px)}
-.legend .sw.cliff{background:transparent;border-left:4px solid var(--sec-rates);background-image:repeating-linear-gradient(135deg,var(--sec-rates) 0 2px,transparent 2px 6px)}
+.legend .sw{
+  width:26px;height:12px;border-radius:2px;display:inline-block;position:relative;
+  color:var(--sec-rates);background:currentColor;
+}
+.legend .sw.partial{
+  background:transparent;box-shadow:inset 0 0 0 1px currentColor;
+  background-image:repeating-linear-gradient(135deg,
+    currentColor 0 2px, transparent 2px 5px);
+}
+.legend .sw.no{
+  background:rgba(127,127,127,.12);box-shadow:inset 0 0 0 1px currentColor;
+}
+.legend .sw.on{opacity:.9}
 .legend .sw.here{background:transparent;border-left:3px solid var(--mark);width:12px}
 .chartwrap{
   border:1px solid var(--grid-strong);border-radius:10px;background:var(--panel);
@@ -299,8 +314,38 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .row:hover{background:var(--row-hot)}
 .row.here .lab{box-shadow:inset 3px 0 0 var(--mark)}
 .row.here .lab .txt{font-weight:700}
-.row.here .bar{outline:1.5px solid var(--mark);outline-offset:1px}
-.row[aria-pressed="true"]{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
+.seg{
+  position:absolute;top:4px;bottom:4px;border:0;padding:0;background:transparent;
+  display:flex;align-items:center;overflow:hidden;cursor:pointer;
+  border-radius:3px;color:inherit;
+}
+.seg::before{content:'';position:absolute;inset:0;border-radius:3px;
+             background:currentColor}
+.seg .btxt{
+  position:relative;z-index:1;padding:0 6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.02em;white-space:nowrap;overflow:hidden;
+}
+/* Solid means you have the whole thing, or it is a plain band. */
+.seg.yes .btxt, .seg.band .btxt{color:var(--bar-ink)}
+/* Hatched means it is on the way down. Only the pattern is dimmed. */
+.seg.partial::before{
+  opacity:.2;
+  background-image:repeating-linear-gradient(135deg,
+    var(--paper) 0 2px, transparent 2px 5px);
+}
+.seg.partial{box-shadow:inset 0 0 0 1px currentColor}
+.seg.partial .btxt{color:var(--ink)}
+/* An outline with almost nothing in it means you cannot have this. */
+.seg.no::before{opacity:.06}
+.seg.no{box-shadow:inset 0 0 0 1px currentColor}
+.seg.no .btxt{color:var(--muted)}
+/* A tax or a limit that has taken hold. */
+.seg.on::before{opacity:.9}
+.seg.on .btxt{color:var(--bar-ink)}
+.seg:hover::before{opacity:1}
+.seg:hover .btxt{color:var(--bar-ink)}
+.seg[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel), 0 0 0 3.5px currentColor}
+.row.on{background:var(--row-tint);box-shadow:inset 3px 0 0 currentColor}
 .row .lab{
   width:var(--label-w);flex:0 0 var(--label-w);padding:0 9px 0 10px;
   display:flex;align-items:center;gap:6px;border-right:1px solid var(--grid-strong);
@@ -313,35 +358,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 }
 .row.off .lab .txt{color:var(--faint)}
 .row .plot{position:relative;flex:1 1 auto}
-.bar{
-  position:absolute;top:5px;bottom:5px;border-radius:3px;min-width:2px;
-  background:currentColor;
-}
-.bar .btxt{
-  position:absolute;inset:0;display:flex;align-items:center;padding:0 6px;
-  font-size:11px;font-weight:700;color:var(--bar-ink);white-space:nowrap;overflow:hidden;
-}
-/* Shape language. A reader should be able to tell what kind of edge it is
-   without opening anything: solid means a fixed band, a fade means the value
-   slides away, a staircase means it drops in jumps, and a thick left rule
-   means one dollar changes the answer. */
-.bar.open{
-  -webkit-mask-image:linear-gradient(to right,#000 78%,transparent 100%);
-          mask-image:linear-gradient(to right,#000 78%,transparent 100%);
-}
-.bar.phaseout{
-  -webkit-mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
-          mask-image:linear-gradient(to right,#000 0%,rgba(0,0,0,.15) 100%);
-}
-.bar.step{
-  -webkit-mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
-          mask-image:repeating-linear-gradient(to right,#000 0 7px,rgba(0,0,0,.35) 7px 14px);
-}
-.bar.cliff{
-  border-left:4px solid currentColor;background:transparent;
-  background-image:repeating-linear-gradient(135deg,currentColor 0 2px,transparent 2px 6px);
-  opacity:.9;
-}
 .mark{
   position:absolute;top:0;bottom:0;width:2px;background:var(--mark);z-index:5;
   pointer-events:none;
@@ -360,6 +376,10 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 .sechead .n{color:var(--faint);font-weight:400;letter-spacing:.02em;text-transform:none}
 .empty{padding:22px 14px;color:var(--faint);font-size:13.5px}
 
+.btxt.away{
+  position:absolute;right:8px;top:0;bottom:0;display:flex;align-items:center;
+  font-size:10.5px;color:var(--faint);
+}
 /* ============================ detail ============================ */
 .hidden-note{
   font-size:12.5px;color:var(--faint);margin:9px 2px 0;max-width:78ch;
@@ -483,15 +503,6 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
       <label for="children">Children under 17</label>
       <input id="children" type="number" min="0" max="12" step="1" value="0">
     </div>
-    <div class="field">
-      <label for="axis">Show income up to</label>
-      <select id="axis">
-        <option value="250000">$250,000</option>
-        <option value="500000">$500,000</option>
-        <option value="1000000">$1,000,000</option>
-        <option value="1500000">$1,500,000</option>
-      </select>
-    </div>
   </div>
 
   <div class="sliderwrap">
@@ -561,11 +572,11 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 <nav class="filters" id="filters" aria-label="Sections"></nav>
 
 <div class="legend" id="legend">
-  <span class="lk"><i class="sw band"></i>Fixed range</span>
-  <span class="lk"><i class="sw phaseout"></i>Gets smaller</span>
-  <span class="lk"><i class="sw step"></i>Drops in steps</span>
-  <span class="lk"><i class="sw cliff"></i>Hard edge</span>
-  <span class="lk"><i class="sw here"></i>Applies to you now</span>
+  <span class="lk"><i class="sw yes"></i>You get the whole thing</span>
+  <span class="lk"><i class="sw partial"></i>Reduced, and still falling</span>
+  <span class="lk"><i class="sw no"></i>Not open to you here</span>
+  <span class="lk"><i class="sw on"></i>Applies at this income</span>
+  <span class="lk"><i class="sw here"></i>Where you are now</span>
 </div>
 
 <div class="chartwrap">
@@ -624,170 +635,260 @@ button.stat.pick[aria-pressed="true"] .n{color:var(--paper)}
 const RULES = [
   {id:"bracket_10", sec:"rates", t:"10% bracket", m:"taxable", shape:"band", o:0,
    e:{single:[0,12400],mfj:[0,24800],mfs:[0,12400],hoh:[0,17700]},
+   lane:"ordinary",
+   sg:"10%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_12", sec:"rates", t:"12% bracket", m:"taxable", shape:"band", o:1,
    e:{single:[12400,50400],mfj:[24800,100800],mfs:[12400,50400],hoh:[17700,67450]},
+   lane:"ordinary",
+   sg:"12%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_22", sec:"rates", t:"22% bracket", m:"taxable", shape:"band", o:2,
    e:{single:[50400,105700],mfj:[100800,211400],mfs:[50400,105700],hoh:[67450,105700]},
+   lane:"ordinary",
+   sg:"22%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_24", sec:"rates", t:"24% bracket", m:"taxable", shape:"band", o:3,
    e:{single:[105700,201775],mfj:[211400,403550],mfs:[105700,201775],hoh:[105700,201750]},
+   lane:"ordinary",
+   sg:"24%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_32", sec:"rates", t:"32% bracket", m:"taxable", shape:"band", o:4,
    e:{single:[201775,256225],mfj:[403550,512450],mfs:[201775,256225],hoh:[201750,256200]},
+   lane:"ordinary",
+   sg:"32%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_35", sec:"rates", t:"35% bracket", m:"taxable", shape:"band", o:5,
    e:{single:[256225,640600],mfj:[512450,768700],mfs:[256225,384350],hoh:[256200,640600]},
+   lane:"ordinary",
+   sg:"35%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"bracket_37", sec:"rates", t:"37% bracket", m:"taxable", shape:"open", o:6,
    e:{single:[640600,null],mfj:[768700,null],mfs:[384350,null],hoh:[640600,null]},
+   lane:"ordinary",
+   sg:"37%",
+   sv:[null,null,null],
+   sk:["no","on","on"],
    d:"A band is a range of income. This rate applies only to the income inside this band, and not to all of your income. Your first dollars still pay 10 percent. The band uses taxable income, which is your income after the standard deduction, or after the deductions you list yourself.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"ltcg_0", sec:"rates", t:"0% capital gains band", m:"taxable", shape:"band", o:10,
    e:{single:[0,49450],mfj:[0,98900],mfs:[0,49450],hoh:[0,66200]},
    st:"0% gains band",
+   lane:"ltcg",
+   sg:"0%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"Long-term gain and qualified dividends pay no tax in this band. The band uses your total taxable income, and not the gain alone. Your other income fills the band first. Only the room that is left holds gain at zero.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"ltcg_15", sec:"rates", t:"15% capital gains band", m:"taxable", shape:"band", o:11,
    e:{single:[49450,545500],mfj:[98900,613700],mfs:[49450,306850],hoh:[66200,579600]},
    st:"15% gains band",
+   lane:"ltcg",
+   sg:"15%",
+   sv:[null,null,null],
+   sk:["band","band","band"],
    d:"Long-term gain and qualified dividends pay 15 percent in this band. To get this rate you must own the asset for more than one year. A gain on an asset you owned for one year or less pays your normal income tax rate instead.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"ltcg_20", sec:"rates", t:"20% capital gains band", m:"taxable", shape:"open", o:12,
    e:{single:[545500,null],mfj:[613700,null],mfs:[306850,null],hoh:[579600,null]},
    st:"20% gains band",
+   lane:"ltcg",
+   sg:"20%",
+   sv:[null,null,null],
+   sk:["no","on","on"],
    d:"Long-term gain more than this point is taxed at 20 percent. The Net Investment Income Tax of 3.8 percent can apply to the same gain. The two use different measures of income, so the real rate becomes 23.8 percent.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"],["IRS: NIIT","https://www.irs.gov/individuals/net-investment-income-tax"]]},
   {id:"niit", sec:"rates", t:"Net Investment Income Tax", m:"magi", shape:"open", o:30,
    e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
    st:"Investment tax",
+   sv:["No","Applies",null],
+   sk:["no","on","on"],
    d:"A tax of 3.8 percent on investment income. It applies to the smaller of two amounts: your net investment income, or the amount of MAGI more than the threshold. MAGI is your adjusted gross income with a few items added back. The tax grows with that excess. It does not start at the full rate on the first dollar. The threshold was never raised for inflation, so more people cross it each year.",
    s:[["IRS: NIIT","https://www.irs.gov/individuals/net-investment-income-tax"]]},
   {id:"addl_medicare", sec:"rates", t:"Additional Medicare Tax", m:"wages", shape:"open", o:21,
    e:{single:[200000,null],mfj:[250000,null],mfs:[125000,null],hoh:[200000,null]},
    st:"Extra Medicare tax",
+   sv:["No","Applies",null],
+   sk:["no","on","on"],
    d:"An extra 0.9 percent on wages more than the threshold. Only the excess is taxed. Your employer begins to take it from your pay at $200,000 from that employer. Your filing status does not change that point. A two- earner couple can therefore have too little taken, and can owe the tax when they file. A qualifying surviving spouse uses the $200,000 figure here, not the joint figure.",
    s:[["IRS: Additional Medicare Tax","https://www.irs.gov/businesses/small-businesses-self-employed/questions-and-answers-for-the-additional-medicare-tax"]]},
   {id:"ss_wage_base", sec:"rates", t:"Social Security wage base", m:"wages", shape:"band", o:20,
    e:{single:[0,184500],mfj:[0,184500],mfs:[0,184500],hoh:[0,184500]},
    st:"SS wage base",
+   sv:[null,"Taxed","No more tax"],
+   sk:["band","on","no"],
    d:"Social Security tax of 6.2 percent applies to wages up to this point. Wages more than this point pay none. The ceiling is per employer, not per person. If you change jobs during the year, both employers take the tax up to the full base. You then claim the excess as a credit.",
    s:[["SSA wage base","https://www.ssa.gov/oact/cola/cbb.html"]]},
   {id:"amt_phaseout", sec:"rates", t:"AMT exemption phase-out", m:"amti", shape:"phaseout", o:31,
    e:{single:[500000,680200],mfj:[1000000,1280400],mfs:[500000,640200],hoh:[500000,680200]},
    st:"AMT exemption",
+   sv:["Full exemption","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"The Alternative Minimum Tax is a second calculation that can raise what you owe. Its exemption shrinks by 50 cents for each dollar more than the start. The exemption reaches zero after a short range. The 2025 law moved the start down and doubled the rate from 25 percent. When you buy shares under an incentive stock option, the discount adds to this measure. That is why this matters most in the year you buy.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"],["IRC 55","https://www.law.cornell.edu/uscode/text/26/55"]]},
   {id:"supplemental_million", sec:"rates", t:"37% supplemental withholding", m:"supplemental", shape:"open", o:22,
    e:{single:[1000000,null],mfj:[1000000,null],mfs:[1000000,null],hoh:[1000000,null]},
    st:"37% withholding",
    needs:"supp",
+   sv:["22%","37%",null],
+   sk:["band","on",null],
    d:"Bonuses and vesting stock are taxed at a flat 22 percent until they pass $1,000,000 for the year. After that the rate is 37 percent. Vesting stock is stock that becomes yours this year. Twenty-two percent is less than the rate most people at this income pay. That is why a large vest often leaves a bill when you file.",
    s:[["IRS Pub 15","https://www.irs.gov/publications/p15"]]},
   {id:"roth_ira", sec:"accounts", t:"Roth IRA phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[153000,168000],mfj:[242000,252000],mfs:[0,10000],hoh:[153000,168000]},
    st:"Roth IRA",
+   sv:["Full amount","Reduced","Not allowed"],
+   sk:["yes","partial","no"],
    d:"A Roth IRA takes money you already paid tax on, and the growth can be tax free later. After the start you can contribute less than the full amount. After the end you cannot contribute directly at all. Married filing separately runs from zero to $10,000. Almost nobody who files that way can contribute. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: Roth IRA limits","https://www.irs.gov/retirement-plans/roth-iras"]]},
   {id:"trad_ira_deduction", sec:"accounts", t:"IRA deduction phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[81000,91000],mfj:[129000,149000],mfs:[0,10000],hoh:[81000,91000]},
    st:"IRA deduction",
+   sv:["Full deduction","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"This range applies when a workplace retirement plan covers you. After the end you can still contribute, but you cannot deduct it. If no plan covers you, there is no income limit at all. A married person who files separately, and who lived apart from their spouse for the whole year, uses the single range instead.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],["IRS: IRA deduction limits","https://www.irs.gov/retirement-plans/ira-deduction-limits"]]},
   {id:"roth_catch_up", sec:"accounts", t:"Roth catch-up required", m:"priorwages", shape:"cliff", o:50,
    e:{single:[150000,null],mfj:[150000,null],mfs:[150000,null],hoh:[150000,null]},
    st:"Roth catch-up",
    ageMin:50,
+   sv:["Either kind","Roth only",null],
+   sk:["yes","on",null],
    d:"New for 2026. Catch-up is the extra amount a person aged 50 or over can contribute. Roth means you pay the tax now, and the growth can be tax free later. Say you earned more than this last year from the employer that sponsors your plan. All of your catch-up must then be Roth. This edge does not move with the slider, because it reads last year and one employer. If the plan has no Roth option, your catch-up is zero.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
   {id:"hce", sec:"accounts", t:"Highly compensated employee", m:"priorwages", shape:"cliff", o:50,
    e:{single:[160000,null],mfj:[160000,null],mfs:[160000,null],hoh:[160000,null]},
    st:"Highly compensated",
+   sv:["No","Highly paid",null],
+   sk:["no","on","on"],
    d:"If you earn more than this, your plan treats you as highly compensated. Testing rules can then cap your contribution. Some plans refund part of it after year end. The test reads last year’s pay.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
   {id:"savers_credit", sec:"accounts", t:"Saver’s Credit", m:"agi", shape:"step", o:50,
    e:{single:[0,40250],mfj:[0,80500],mfs:[0,40250],hoh:[0,60375]},
    st:"Saver’s Credit",
+   sv:["Credit","Less each step","None"],
+   sk:["yes","partial","no"],
    d:"A credit worth 50, 20, or 10 percent of what you contribute to a retirement account, on the first $2,000. The rate drops in steps and does not slide. One dollar of extra income can therefore cut the credit sharply. The credit ends at the top of this band.",
    s:[["IRS: Saver’s Credit","https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-savers-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"salt_phasedown", sec:"deductions", t:"SALT cap phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[505000,606333],mfj:[505000,606333],mfs:[252500,303167],hoh:[505000,606333]},
    st:"SALT cap",
    floor:true,
+   sv:["Full $40,400","Less each step","$10,000 floor"],
+   sk:["yes","partial","on"],
    d:"SALT means state and local tax. The cap on that deduction is $40,400 for 2026, far more than the old $10,000. After the start the cap falls by 30 cents for each dollar of income. The floor is $10,000.",
    s:[["IRC 164","https://www.law.cornell.edu/uscode/text/26/164"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"qbi_phasein", sec:"deductions", t:"QBI deduction limits", m:"taxable", shape:"phaseout", o:50,
    e:{single:[201750,276750],mfj:[403500,553500],mfs:[201775,276775],hoh:[201750,276750]},
    st:"QBI limits",
+   sv:["No limit","Limits arrive","Limits apply"],
+   sk:["yes","partial","on"],
    d:"QBI means qualified business income. Under the start, the 20 percent deduction on that income has no wage test and no restriction on the type of work. Across this range a limit based on the wages the business pays takes effect. For professional service work the deduction disappears completely.",
    s:[["IRS: QBI deduction","https://www.irs.gov/newsroom/qualified-business-income-deduction"]]},
   {id:"senior_deduction", sec:"deductions", t:"Senior deduction phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[75000,175000],mfj:[150000,250000],mfs:[null,null],hoh:[75000,175000]},
    st:"Senior deduction",
    ageMin:65,
+   sv:["Full $6,000","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"A deduction of $6,000 for each person aged 65 or over. It is separate from the extra standard deduction for age. It falls by 6 cents for each dollar more than the start. A couple where both qualify get two of them, and both reach zero at the same income. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"tips_deduction", sec:"deductions", t:"Tips deduction phase-out", m:"magi", shape:"step", o:50,
    e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
    st:"Tips deduction",
    needs:"tips",
+   sv:["Full deduction","Less each step","None"],
+   sk:["yes","partial","no"],
    d:"Up to $25,000 of tip income is deductible. After the start it falls by $100 for each full $1,000 of income, so it drops in steps and does not slide. Where it reaches zero depends on how much you earned in tips. It does not depend on the cap. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
   {id:"overtime_deduction", sec:"deductions", t:"Overtime deduction phase-out", m:"magi", shape:"step", o:50,
    e:{single:[150000,null],mfj:[300000,null],mfs:[null,null],hoh:[150000,null]},
    st:"Overtime deduction",
    needs:"overtime",
+   sv:["Full deduction","Less each step","None"],
+   sk:["yes","partial","no"],
    d:"Up to $12,500 of overtime pay is deductible, or $25,000 on a joint return. It falls by $100 for each full $1,000 of income more than the start, in steps. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
   {id:"car_loan_deduction", sec:"deductions", t:"Car loan interest phase-out", m:"magi", shape:"step", o:50,
    e:{single:[100000,null],mfj:[200000,null],mfs:[null,null],hoh:[100000,null]},
    st:"Car loan interest",
    needs:"carloan",
+   sv:["Full deduction","Less each step","None"],
+   sk:["yes","partial","no"],
    d:"Up to $10,000 of interest on a loan for a new car assembled in the United States. It falls by $200 for each $1,000 of income more than the start. This one rounds the income up rather than down, so you lose the deduction one step sooner. It ends after 2028.",
    s:[["Draft Schedule 1-A","https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf"]]},
   {id:"student_loan_interest", sec:"deductions", t:"Student loan interest phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[85000,100000],mfj:[175000,205000],mfs:[null,null],hoh:[85000,100000]},
    st:"Student loan",
+   sv:["Full deduction","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"Up to $2,500 of student loan interest is deductible without itemizing. The deduction slides to zero across this range. Married filing separately cannot claim it at all.",
    s:[["IRS: student loan interest","https://www.irs.gov/taxtopics/tc456"]]},
   {id:"itemized_top_limit", sec:"deductions", t:"Itemized deduction limit", m:"taxable", shape:"open", o:50,
    e:{single:[640600,null],mfj:[768700,null],mfs:[384350,null],hoh:[640600,null]},
    st:"Itemized limit",
+   sv:["No limit","Limit applies",null],
+   sk:["yes","on",null],
    d:"To itemize is to list your deductions instead of taking the standard deduction. Once you reach the top bracket, your itemized deductions are cut by about 5.4 percent of the amount more than this point. The effect is to cap their value at 35 cents in the dollar rather than 37. The test adds your itemized deductions back before it compares, so it can start earlier than this bar shows.",
    s:[["IRC 68","https://www.law.cornell.edu/uscode/text/26/68"]]},
   {id:"ctc_phaseout", sec:"credits", t:"Child Tax Credit phase-out", m:"magi", shape:"step", o:50,
    e:{single:[200000,null],mfj:[400000,null],mfs:[200000,null],hoh:[200000,null]},
    st:"Child Tax Credit",
    needs:"children",
+   sv:["Full credit","Less each step","None"],
+   sk:["yes","partial","no"],
    d:"The credit is $2,200 for each qualifying child. After the start it falls by $50 for each $1,000 of income. Where the credit reaches zero depends on how many children you have. The end of this band therefore moves with your family, and it is not a fixed amount.",
    s:[["IRS: Child Tax Credit","https://www.irs.gov/credits-deductions/individuals/child-tax-credit"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"education_credits", sec:"credits", t:"Education credits phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[80000,90000],mfj:[160000,180000],mfs:[null,null],hoh:[80000,90000]},
    st:"Education credits",
+   sv:["Full credit","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"Both education credits use the same range. The American Opportunity credit is worth up to $2,500 per student and the Lifetime Learning credit up to $2,000 per return. Neither is available to a person who files separately.",
    s:[["IRS: education credits","https://www.irs.gov/credits-deductions/individuals/education-credits-aotc-llc"]]},
   {id:"adoption_credit", sec:"credits", t:"Adoption credit phase-out", m:"magi", shape:"phaseout", o:50,
    e:{single:[265080,305080],mfj:[265080,305080],mfs:[265080,305080],hoh:[265080,305080]},
    st:"Adoption credit",
+   sv:["Full credit","Reduced","None"],
+   sk:["yes","partial","no"],
    d:"The credit is up to $17,670 for each child you adopt. Of that amount, $5,120 is refundable, so you can receive it even if you owe no tax. The credit slides to zero across this range.",
    s:[["IRS: adoption credit","https://www.irs.gov/taxtopics/tc607"],["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"cdcc_rate", sec:"credits", t:"Care credit rate falls", m:"agi", shape:"step", o:0,
    e:{single:[15000,43001],mfj:[15000,43001],mfs:[15000,43001],hoh:[15000,43001]},
    st:"Care credit",
    floor:true,
+   lane:"care",
+   sg:"50 to 35%",
+   sv:[null,"50 to 35%",null],
+   sk:["yes","partial","no"],
    d:"The child and dependent care credit starts at 50 percent of what you spend. It falls one point for every $2,000 of income more than $15,000. It stops at 35 percent. The rate then holds at 35 percent until the second fall starts.",
    s:[["IRS Pub 503","https://www.irs.gov/publications/p503"]]},
   {id:"cdcc_rate_2", sec:"credits", t:"Care credit falls again", m:"agi", shape:"step", o:1,
    e:{single:[75000,103001],mfj:[150000,206001],mfs:[75000,103001],hoh:[75000,103001]},
    st:"Care credit 2",
    floor:true,
+   lane:"care",
+   sg:"35 to 20%",
+   sv:[null,"35 to 20%",null],
+   sk:["yes","partial","no"],
    d:"The second fall takes the care credit rate from 35 percent to 20 percent. It drops one point for every $2,000 of income more than $75,000. On a joint return it drops one point for every $4,000 more than $150,000. The rate stops at 20 percent and stays there.",
    s:[["IRS Pub 503","https://www.irs.gov/publications/p503"]]},
   {id:"ss_earnings_test", sec:"health", t:"Social Security earnings test", m:"wages", shape:"open", o:50,
@@ -796,42 +897,66 @@ const RULES = [
    ageMin:62,
    ageMax:66,
    needs:"ssben",
+   sv:["Keep it all","Part withheld",null],
+   sk:["yes","on",null],
    d:"Full retirement age is the age at which you can draw your whole benefit. Say you draw Social Security before that age and you still work. SSA then keeps back $1 of benefit for each $2 you earn more than this point. The money is not lost. SSA raises your benefit again when you reach full retirement age.",
    s:[["SSA 2026 COLA","https://www.ssa.gov/news/en/cola/factsheets/2026.html"]]},
   {id:"aca_cliff", sec:"health", t:"ACA subsidy cliff", m:"magiTei", shape:"cliff", o:50,
    e:{single:[62600,null],mfj:[62600,null],mfs:[62600,null],hoh:[62600,null]},
    st:"ACA cliff",
    needs:"ownplan",
+   sv:["Help available","No help",null],
+   sk:["yes","no",null],
    d:"This is the sharpest edge in the tax code, and it returned for 2026. If your income is less than 400 percent of the poverty level, you can get help to pay for a health plan you buy yourself. One dollar more and you get nothing. The 2025 law also removed the cap on repaying help you already received.",
    s:[["IRS: premium tax credit","https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics"],["HHS poverty guidelines","https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines"],["Rev. Proc. 2025-25","https://www.irs.gov/pub/irs-drop/rp-25-25.pdf"]]},
   {id:"irmaa_1", sec:"health", t:"Medicare surcharge, tier 1", m:"magiTei", shape:"cliff", o:50,
    e:{single:[109000,null],mfj:[218000,null],mfs:[null,null],hoh:[109000,null]},
    st:"Surcharge tier 1",
    ageMin:63,
+   lane:"irmaa",
+   sg:"Tier 1",
+   sv:[null,"Tier 1",null],
+   sk:["no","on","on"],
    d:"After this point Medicare charges $81.20 more each month for Part B and $14.50 more for Part D, for each person. Every tier is a hard edge and not a slope. One dollar can therefore cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
    s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
   {id:"irmaa_2", sec:"health", t:"Medicare surcharge, tier 2", m:"magiTei", shape:"cliff", o:50,
    e:{single:[137000,null],mfj:[274000,null],mfs:[null,null],hoh:[137000,null]},
    st:"Surcharge tier 2",
    ageMin:63,
+   lane:"irmaa",
+   sg:"Tier 2",
+   sv:[null,"Tier 2",null],
+   sk:["no","on","on"],
    d:"After this point Medicare charges $202.90 more each month for Part B and $37.50 more for Part D, for each person. Every tier is a hard edge and not a slope. One dollar can therefore cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
    s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
   {id:"irmaa_3", sec:"health", t:"Medicare surcharge, tier 3", m:"magiTei", shape:"cliff", o:50,
    e:{single:[171000,null],mfj:[342000,null],mfs:[null,null],hoh:[171000,null]},
    st:"Surcharge tier 3",
    ageMin:63,
+   lane:"irmaa",
+   sg:"Tier 3",
+   sv:[null,"Tier 3",null],
+   sk:["no","on","on"],
    d:"After this point Medicare charges $324.60 more each month for Part B and $60.40 more for Part D, for each person. Every tier is a hard edge and not a slope. One dollar can therefore cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
    s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
   {id:"irmaa_4", sec:"health", t:"Medicare surcharge, tier 4", m:"magiTei", shape:"cliff", o:50,
    e:{single:[205000,null],mfj:[410000,null],mfs:[109000,null],hoh:[205000,null]},
    st:"Surcharge tier 4",
    ageMin:63,
+   lane:"irmaa",
+   sg:"Tier 4",
+   sv:[null,"Tier 4",null],
+   sk:["no","on","on"],
    d:"After this point Medicare charges $446.30 more each month for Part B and $83.30 more for Part D, for each person. Every tier is a hard edge and not a slope. One dollar can therefore cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
    s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
   {id:"irmaa_5", sec:"health", t:"Medicare surcharge, tier 5", m:"magiTei", shape:"cliff", o:50,
    e:{single:[500000,null],mfj:[750000,null],mfs:[391000,null],hoh:[500000,null]},
    st:"Surcharge tier 5",
    ageMin:63,
+   lane:"irmaa",
+   sg:"Tier 5",
+   sv:[null,"Tier 5",null],
+   sk:["no","on","on"],
    d:"After this point Medicare charges $487.00 more each month for Part B and $91.00 more for Part D, for each person. Every tier is a hard edge and not a slope. One dollar can therefore cost hundreds over a year. It reads your income from two years earlier, so what you earn now sets your premium at 65.",
    s:[["CMS 2026 premiums","https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"]]},
   {id:"ss_benefit_tax_mfs", sec:"health", t:"Benefits taxed, separate return", m:"provisional", shape:"open", o:1,
@@ -839,6 +964,8 @@ const RULES = [
    st:"SS, separate",
    ageMin:62,
    needs:"ssben",
+   sv:[null,"Up to 85%",null],
+   sk:[null,"on",null],
    d:"A married person who files separately, and who lived with their spouse at any time in the year, gets no threshold. Up to 85 percent of the benefit is taxable from the first dollar. This is the hardest version of the rule. Living apart for the whole year moves you to the single thresholds instead.",
    s:[["IRC 86","https://www.law.cornell.edu/uscode/text/26/86"]]},
   {id:"ss_benefit_tax", sec:"health", t:"Social Security benefits taxed", m:"provisional", shape:"phaseout", o:50,
@@ -846,23 +973,38 @@ const RULES = [
    st:"SS benefits taxed",
    ageMin:62,
    needs:"ssben",
+   sv:["None taxed","Up to 50%","Up to 85%"],
+   sk:["yes","partial","on"],
    d:"Part of your Social Security benefit becomes taxable after these points. Up to half is taxed in the lower band and up to 85 percent after it. These figures were set in 1983 and 1993, and they were never raised for inflation. A married person who files separately and lived with their spouse gets no threshold. For that person, up to 85 percent is taxable from the first dollar.",
    s:[["IRC 86","https://www.law.cornell.edu/uscode/text/26/86"]]},
   {id:"comp_limit", sec:"accounts", t:"Pay a plan can count", m:"wages", shape:"open", o:5,
    e:{single:[360000,null],mfj:[360000,null],mfs:[360000,null],hoh:[360000,null]},
    st:"Plan pay cap",
+   sv:["Pay counts","No longer counts",null],
+   sk:["yes","no",null],
    d:"A retirement plan cannot count pay of more than $360,000 for the year. Pay more than this earns no further employer match, and it does not raise a contribution that is set as a percent of pay. A person who earns more than this gets the whole match earlier in the year.",
    s:[["Notice 2025-67","https://www.irs.gov/pub/irs-drop/n-25-67.pdf"]]},
   {id:"amt_rate_step", sec:"rates", t:"AMT rate steps to 28%", m:"amti", shape:"open", o:9,
    e:{single:[334600,null],mfj:[384700,null],mfs:[192350,null],hoh:[334600,null]},
    st:"AMT 28% step",
+   sv:["26%","28%",null],
+   sk:["band","on",null],
    d:"The alternative minimum tax charges 26 percent, then 28 percent past this point. The step is on income more than $244,500, or $122,250 on a separate return, after the exemption. The figures here add the full exemption back, so the step reads on the same measure as the exemption phase-out.",
    s:[["Rev. Proc. 2025-32","https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"]]},
   {id:"estimated_110", sec:"filing", t:"110% safe harbor", m:"agi", shape:"open", o:50,
    e:{single:[150000,null],mfj:[150000,null],mfs:[75000,null],hoh:[150000,null]},
+   sv:["100% is enough","110% needed",null],
+   sk:["yes","on",null],
    d:"To avoid a penalty you normally pay 100 percent of last year’s tax during the year. If your income is more than this, the figure rises to 110 percent. The rule is called a safe harbor. It catches people in the year after a large vest or a large gain.",
    s:[["IRS: estimated taxes","https://www.irs.gov/faqs/estimated-tax"]]},
 ];
+
+const LANES = {
+  ordinary:{t:"Federal tax brackets", st:"Tax brackets", sec:"rates", o:0, gap:"No tax"},
+  ltcg:{t:"Long-term gain bands", st:"Gain bands", sec:"rates", o:1, gap:"No tax"},
+  irmaa:{t:"Medicare surcharge", st:"Medicare", sec:"health", o:40, gap:"No surcharge"},
+  care:{t:"Care credit rate", st:"Care credit", sec:"credits", o:10, gap:null},
+};
 
 const NEEDS_REASON = {"carloan":"car loan interest","children":"a child under 17","overtime":"overtime pay","ownplan":"your own health plan","ssben":"a Social Security benefit","supp":"a bonus or vesting stock","tips":"tip income"};
 
@@ -938,12 +1080,15 @@ const narrow = () => window.innerWidth <= 720;
 const labelOf = r => (narrow() && r.st) ? r.st : r.t;
 const secName = s => narrow() ? SEC_SHORT[s] : SEC_NAME[s];
 const AXIS_MIN = 0;
+/* Fixed. Segments span the whole line now, so a row stays readable even when
+   its edges cluster at the left of a wide axis. */
+const AXIS_TOP = 1000000;
 const STATUS_NAME = { single:'single', mfj:'jointly', mfs:'separately',
                       hoh:'as head of household' };
 
 /* ============================== the state ============================== */
 const S = {
-  status:'single', age:35, children:0, axis:250000, income:120000,
+  status:'single', age:35, children:0, axis:AXIS_TOP, income:120000,
   mix:{ wage:120000, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 },
   adj:{ k401:0, hsa:0, iso:0 },
   oth:{ tips:0, ot:0, car:0, ss:0, hdhp:false, own:false },
@@ -957,6 +1102,7 @@ function load(){
     if(!raw) return false;
     const p = JSON.parse(raw);
     Object.assign(S, p);
+    S.axis = AXIS_TOP;
     S.mix = Object.assign(S.mix, p.mix||{});
     S.adj = Object.assign(S.adj, p.adj||{});
     S.oth = Object.assign(S.oth, p.oth||{});
@@ -1175,6 +1321,81 @@ function tickStep(){
        : span <= 1000000 ? 100000 : 250000;
 }
 
+/* What the reader has at each point along the axis, for one rule. A phase-out
+   used to be drawn as the window in which the benefit shrinks, which answered
+   a question nobody asks. These segments answer "can I have this, and how
+   much", which is the question the page exists for. */
+function segmentsFor(rule, p){
+  const [before, inside, after] = rule.sv || [null, null, null];
+  const [kBefore, kInside, kAfter] = rule.sk || ['band', 'band', 'band'];
+  const segs = [];
+
+  /* A rule in a lane is one segment of a shared row and carries only its own
+     range, because its neighbours cover the rest of the line. */
+  if (rule.lane){
+    segs.push({ lo:p.lo, hi:p.hi, label:rule.sg || inside || rule.t,
+                kind:'band', id:rule.id });
+    return segs;
+  }
+
+  if (before && p.lo > 0)
+    segs.push({ lo:0, hi:p.lo, label:before, kind:kBefore, id:rule.id });
+
+  if (p.hi === null){
+    if (inside) segs.push({ lo:p.lo, hi:null, label:inside, kind:kInside, id:rule.id });
+  } else {
+    if (inside) segs.push({ lo:p.lo, hi:p.hi, label:inside, kind:kInside, id:rule.id });
+    if (after)  segs.push({ lo:p.hi, hi:null, label:after, kind:kAfter, id:rule.id });
+  }
+  if (!segs.length)
+    segs.push({ lo:p.lo, hi:p.hi, label:rule.sg || rule.t, kind:'band', id:rule.id });
+  return segs;
+}
+
+/* Rows, in order, each holding the segments of one lane. */
+function lanesFor(sec){
+  const rows = new Map();
+  let offscale = 0;
+
+  for (const r of RULES){
+    if (r.sec !== sec || !applies(r)) continue;
+    const p = place(r);
+    if (!p) continue;
+    if (S.only && !inTally(r, p, S.only)) continue;
+    const key = r.lane || r.id;
+    if (!rows.has(key))
+      rows.set(key, { key:key, lane:r.lane ? LANES[r.lane] : null,
+                      rules:[], segs:[], o:r.lane ? LANES[r.lane].o : r.o, lo:p.lo });
+    const row = rows.get(key);
+    row.rules.push(r);
+    row.lo = Math.min(row.lo, p.lo);
+    for (const g of segmentsFor(r, p)) row.segs.push(g);
+  }
+
+  const out = [...rows.values()];
+  for (const row of out){
+    /* A lane whose every segment sits past the right edge has nothing to draw,
+       and the reader still needs to know it is there. */
+    row.off = row.segs.every(g => g.lo > S.axis);
+    if (row.off) offscale++;
+    row.segs.sort((a, b) => a.lo - b.lo);
+    if (row.lane && row.lane.gap && row.segs.length && row.segs[0].lo > 0)
+      row.segs.unshift({ lo:0, hi:row.segs[0].lo, label:row.lane.gap,
+                         kind:'no', id:row.rules[0].id });
+    row.title = row.lane ? (narrow() ? row.lane.st : row.lane.t)
+                         : labelOf(row.rules[0]);
+    row.full = row.lane ? row.lane.t : row.rules[0].t;
+    row.here = row.rules.some(r => { const p = place(r); return p && isHere(r, p); });
+  }
+  out.sort((a, b) => (a.o - b.o) || (a.lo - b.lo));
+  return { rows:out, offscale:offscale };
+}
+
+function isHere(r, p){
+  const w = standing(p, r.shape);
+  return w === 'inside' || (r.shape === 'cliff' && w === 'above');
+}
+
 function renderChart(){
   const track = $('track');
   track.textContent = '';
@@ -1182,71 +1403,64 @@ function renderChart(){
 
   for (const sec of SEC){
     if (S.off[sec]) continue;
-    const rules = RULES.filter(r => r.sec === sec && applies(r));
-    const placed = [];
-    for (const r of rules){
-      const p = place(r);
-      if (!p) continue;
-      if (S.only && !inTally(r, p, S.only)) continue;
-      placed.push({ r:r, p:p });
-    }
-    if (!placed.length) continue;
-    placed.sort((a, b) => (a.r.o - b.r.o) || (a.p.lo - b.p.lo));
+    const built = lanesFor(sec);
+    if (!built.rows.length) continue;
+    hiddenOff += built.offscale;
 
     const h = document.createElement('div');
     h.className = 'sechead';
     h.style.color = 'var(--sec-' + sec + ')';
     h.innerHTML = '<span>' + secName(sec) + '</span><span class="n">' +
-      placed.length + (placed.length === 1 ? ' rule' : ' rules') + '</span>';
+      built.rows.length + (built.rows.length === 1 ? ' row' : ' rows') + '</span>';
     track.appendChild(h);
 
-    for (const item of placed){
-      const r = item.r, p = item.p;
-      const offscale = p.lo > S.axis;
-      if (offscale) hiddenOff++;
+    for (const row of built.rows){
       shown++;
-
-      const row = document.createElement('button');
-      row.type = 'button';
-      const where = standing(p, r.shape);
-      const isHere = where === 'inside' ||
-                     (r.shape === 'cliff' && where === 'above');
-      row.className = 'row' + (offscale ? ' off' : '') + (isHere ? ' here' : '');
-      row.style.color = 'var(--sec-' + sec + ')';
-      row.setAttribute('aria-pressed', S.picked === r.id ? 'true' : 'false');
-      row.dataset.id = r.id;
+      const picked = row.rules.some(r => r.id === S.picked);
+      const div = document.createElement('div');
+      div.className = 'row' + (row.off ? ' off' : '') + (row.here ? ' here' : '') +
+                      (picked ? ' on' : '');
+      div.style.color = 'var(--sec-' + sec + ')';
 
       const lab = document.createElement('div');
       lab.className = 'lab';
       lab.innerHTML = '<span class="dot"></span><span class="txt"></span>';
-      lab.querySelector('.txt').textContent = labelOf(r);
-      lab.title = r.t;
-      row.appendChild(lab);
+      lab.querySelector('.txt').textContent = row.title;
+      lab.title = row.full;
+      div.appendChild(lab);
 
       const plot = document.createElement('div');
       plot.className = 'plot';
-      if (!offscale){
-        const bar = document.createElement('div');
-        bar.className = 'bar ' + r.shape;
-        const left = xOf(p.lo);
-        const right = p.hi === null ? 100 : xOf(p.hi);
-        bar.style.left = left + '%';
-        bar.style.width = Math.max(0.35, right - left) + '%';
-        const t = document.createElement('span');
-        t.className = 'btxt';
-        t.textContent = p.hi === null ? fmtShort(p.lo) + ' and up'
-                                      : fmtShort(p.lo) + '\u2013' + fmtShort(p.hi);
-        bar.appendChild(t);
-        plot.appendChild(bar);
+
+      if (row.off){
+        const s = document.createElement('span');
+        s.className = 'btxt away';
+        s.textContent = 'starts at ' + fmtShort(row.lo);
+        plot.appendChild(s);
       } else {
-        const t = document.createElement('span');
-        t.className = 'btxt';
-        t.style.cssText = 'position:absolute;right:6px;top:0;bottom:0;color:var(--faint)';
-        t.textContent = 'starts at ' + fmtShort(p.lo);
-        plot.appendChild(t);
+        for (const g of row.segs){
+          if (g.lo > S.axis) continue;
+          const left = xOf(g.lo);
+          const right = g.hi === null ? 100 : xOf(g.hi);
+          if (right - left < 0.15) continue;
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'seg ' + g.kind + (S.picked === g.id ? ' on' : '');
+          b.dataset.id = g.id;
+          b.style.left = left + '%';
+          b.style.width = (right - left) + '%';
+          b.setAttribute('aria-pressed', S.picked === g.id ? 'true' : 'false');
+          const rule = RULES.find(x => x.id === g.id);
+          b.title = rule ? rule.t + ' \u00b7 ' + g.label : g.label;
+          const sp = document.createElement('span');
+          sp.className = 'btxt';
+          sp.textContent = g.label;
+          b.appendChild(sp);
+          plot.appendChild(b);
+        }
       }
-      row.appendChild(plot);
-      track.appendChild(row);
+      div.appendChild(plot);
+      track.appendChild(div);
     }
   }
 
@@ -1273,8 +1487,9 @@ function renderChart(){
   renderHidden(hiddenOff);
 
   /* A caption that does not fit is worse than no caption, so measure once the
-     bars are laid out and drop the ones that would be clipped. */
-  for (const t2 of track.querySelectorAll('.bar .btxt')){
+     segments are laid out and drop the ones that would be clipped. A $1m axis
+     puts several bracket edges inside a few pixels of each other. */
+  for (const t2 of track.querySelectorAll('.seg .btxt')){
     if (t2.scrollWidth > t2.clientWidth + 1) t2.remove();
   }
 
@@ -1331,25 +1546,13 @@ function renderHidden(offscale){
                     (statusHidden === 1 ? ' rule does' : ' rules do') +
                     ' not exist for your filing status.');
   if (offscale){
-    parts.push(offscale + (offscale === 1 ? ' rule starts' : ' rules start') +
-               ' past the right edge of the chart.');
+    parts.push(offscale + (offscale === 1 ? ' row starts' : ' rows start') +
+               ' past $1m, which is the right edge of the chart.');
   }
 
   el.textContent = '';
   if (!parts.length) return;
   el.append(parts.join(' ') + ' ');
-  if (offscale && S.axis < 1500000){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = 'Show more income';
-    b.addEventListener('click', () => {
-      S.axis = S.axis < 500000 ? 500000 : S.axis < 1000000 ? 1000000 : 1500000;
-      $('axis').value = String(S.axis);
-      $('income').max = String(S.axis);
-      bump();
-    });
-    el.appendChild(b);
-  }
 }
 
 function renderMarkerCap(){
@@ -1473,13 +1676,15 @@ function renderFilters(){
   const f = $('filters');
   f.textContent = '';
   for (const sec of SEC){
-    const n = RULES.filter(r => r.sec === sec && applies(r)).length;
+    const n = new Set(RULES.filter(r => r.sec === sec && applies(r))
+                           .map(r => r.lane || r.id)).size;
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.sec = sec;
-    b.style.color = S.off[sec] ? '' : 'var(--sec-' + sec + ')';
+    b.style.setProperty('--dot', 'var(--sec-' + sec + ')');
     b.setAttribute('aria-pressed', S.off[sec] ? 'false' : 'true');
     b.innerHTML = '<span class="dot"></span>' + secName(sec) + ' ' + n;
+    b.title = n + (n === 1 ? ' row' : ' rows') + ' in this section';
     f.appendChild(b);
   }
 }
@@ -1494,13 +1699,13 @@ const WHERE = {
 function renderDetail(){
   const d = $('detail');
   if (!S.picked){
-    d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any row</h3>' +
-      '<p>Select a bar on the chart. You can then read what it is, where its ' +
+    d.innerHTML = '<div class="kicker">Detail</div><h3>Pick any block</h3>' +
+      '<p>Select a block on the chart. You can then read what it is, where its ' +
       'edges fall for you, and which document the figures come from.</p>' +
-      '<p>The shape of a bar tells you what kind of edge it is. A solid bar is ' +
-      'a fixed range. A bar that fades is a benefit that gets smaller as your ' +
-      'income rises. A staircase drops in steps. A hatched bar with a hard ' +
-      'left edge is a cliff, where one dollar changes the answer.</p>';
+      '<p>Each row is one subject, and the blocks along it show what you get at ' +
+      'each level of income. A solid block is the whole amount. A hatched block ' +
+      'is an amount that falls as your income rises. An empty block is an ' +
+      'amount you cannot have at that income.</p>';
     return;
   }
   const lim = LIMITS.find(l => l.id === S.picked);
@@ -1624,7 +1829,7 @@ function writeMix(){
 }
 function writeControls(){
   $('status').value = S.status; $('age').value = S.age;
-  $('children').value = S.children; $('axis').value = String(S.axis);
+  $('children').value = S.children;
   $('income').max = String(S.axis);
   $('income').value = String(Math.min(S.income, S.axis));
   $('a401k').value = S.adj.k401; $('aHsa').value = S.adj.hsa; $('aIso').value = S.adj.iso;
@@ -1634,9 +1839,6 @@ function writeControls(){
   writeMix();
 }
 
-function pickAxis(v){
-  return v <= 200000 ? 250000 : v <= 420000 ? 500000 : v <= 850000 ? 1000000 : 1500000;
-}
 
 function bump(){ save(); renderAll(); }
 
@@ -1653,18 +1855,11 @@ $('income').addEventListener('input', e => {
 $('status').addEventListener('change', e => { S.status = e.target.value; bump(); });
 $('age').addEventListener('input', e => { S.age = Math.max(0, +e.target.value || 0); bump(); });
 $('children').addEventListener('input', e => { S.children = Math.max(0, +e.target.value || 0); bump(); });
-$('axis').addEventListener('change', e => {
-  S.axis = +e.target.value;
-  $('income').max = String(S.axis);
-  if (S.income > S.axis){ S.income = S.axis; $('income').value = String(S.axis); }
-  bump();
-});
 
 for (const id of ['mWage','mBonus','mRsu','mInt','mQdiv','mLtg','mStg','mExempt']){
   $(id).addEventListener('input', () => {
     readMix();
     S.income = mixTotal();
-    if (S.income > S.axis){ S.axis = pickAxis(S.income); }
     $('axis').value = String(S.axis);
     $('income').max = String(S.axis);
     $('income').value = String(S.income);
@@ -1703,9 +1898,9 @@ $('filters').addEventListener('click', e => {
   bump();
 });
 $('track').addEventListener('click', e => {
-  const row = e.target.closest('.row');
-  if (!row) return;
-  S.picked = S.picked === row.dataset.id ? null : row.dataset.id;
+  const seg = e.target.closest('.seg');
+  if (!seg) return;
+  S.picked = S.picked === seg.dataset.id ? null : seg.dataset.id;
   bump();
   if (S.picked) $('detail').scrollIntoView({ block:'nearest', behavior:'smooth' });
 });
@@ -1744,7 +1939,6 @@ $('mGo').addEventListener('click', () => {
   S.status = $('mStatus').value;
   S.age = Math.max(0, +$('mAge').value || 0);
   S.income = Math.max(0, +$('mIncome').value || 0);
-  S.axis = pickAxis(S.income);
   S.mix = { wage:S.income, bonus:0, rsu:0, int:0, qdiv:0, ltg:0, stg:0, exempt:0 };
   $('scrim').hidden = true;
   writeControls();

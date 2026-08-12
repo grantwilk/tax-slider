@@ -319,7 +319,7 @@ function base(over) {
   // No bar may leave its lane, and none may run off the right of the plot.
   const overflow = await page.evaluate(() => {
     const bad = [];
-    for (const bar of document.querySelectorAll('.bar')) {
+    for (const bar of document.querySelectorAll('.seg')) {
       const b = bar.getBoundingClientRect(), p = bar.parentElement.getBoundingClientRect();
       if (b.right > p.right + 1.5) bad.push('runs past the right edge');
       if (b.left < p.left - 1.5) bad.push('starts left of the plot');
@@ -330,7 +330,7 @@ function base(over) {
   eq('no bar escapes its lane', overflow.join(' | '), '');
 
   // Clicking a row must open that row in the detail panel.
-  await page.locator('.row').filter({ hasText: 'Roth IRA phase-out' }).first().click();
+  await page.locator('.seg[data-id="roth_ira"]').first().click();
   const dTitle = (await page.locator('#detail h3').innerText()).trim();
   eq('a row opens in the detail panel', dTitle, 'Roth IRA phase-out');
   const srcCount = await page.locator('#detail .srcs a').count();
@@ -488,10 +488,10 @@ function base(over) {
 
   eq('the shape legend is on the page before any click',
      await page.locator('#legend .lk').count(), 5);
-  await page.locator('.row').first().click();
+  await page.locator('.seg').first().click();
   eq('the shape legend survives a click',
      await page.locator('#legend .lk').count(), 5);
-  await page.locator('.row').first().click();
+  await page.locator('.seg').first().click();
 
   ok('the rules the marker sits inside are marked on the chart',
      (await page.locator('.row.here').count()) > 0,
@@ -561,11 +561,11 @@ function base(over) {
     return r ? r.id : '';
   });
   if (cliffId) {
-    await page.locator(`.row[data-id="${cliffId}"]`).click();
+    await page.locator(`.seg[data-id="${cliffId}"]`).first().click();
     const where = await page.locator('.detail .where').textContent();
     ok('a cliff is never described as having a top', !/top of this band/.test(where),
        where.slice(0, 70), 'no band on a cliff');
-    await page.locator(`.row[data-id="${cliffId}"]`).click();
+    await page.locator(`.seg[data-id="${cliffId}"]`).first().click();
   }
 
   await page.locator('#restart').click();
@@ -657,6 +657,59 @@ function base(over) {
          .concat(lim.filter(id => !t.LIMITS.some(l => l.id === id)));
        return missing.join(',');
      `), '');
+
+
+  // --------------------------------------------------------------------
+  // Lanes, and blocks that say what you are entitled to.
+  // --------------------------------------------------------------------
+  await ask(page, base({ top: { status: 'single', age: 35, children: 0, income: 180000 } }), 'return 0;');
+  await page.evaluate(() => window.__ts.render());
+
+  eq('the seven brackets share one row',
+     await page.locator('.row').filter({ hasText: 'Federal tax brackets' }).count(), 1);
+  eq('all seven bracket blocks are on that row',
+     await page.locator('.row').filter({ hasText: 'Federal tax brackets' })
+       .locator('.seg').evaluateAll(
+         els => new Set(els.map(e => e.dataset.id).filter(id => id.startsWith('bracket_'))).size),
+     7);
+  eq('the three gain bands share one row',
+     await page.locator('.row').filter({ hasText: 'Long-term gain bands' }).count(), 1);
+
+  // The whole point of the redesign: a phase-out row says where you can have
+  // the thing, not only where it is on the way out.
+  const rothKinds = await page.locator('.seg[data-id="roth_ira"]').evaluateAll(
+    els => els.map(e => e.className.replace('seg ', '') + ':' + e.textContent).join(' | '));
+  ok('the Roth row shows the band you can use, not only the phase-out',
+     /yes:Full amount/.test(rothKinds) && /no:Not allowed/.test(rothKinds),
+     rothKinds, 'a full band, a reduced band, and a barred band');
+
+  // A tax you do not owe must not look like a benefit you hold.
+  eq('a tax that has not reached you is drawn as empty',
+     await page.locator('.seg[data-id="niit"]').first().evaluate(e => e.className),
+     'seg no');
+  eq('a tax that has reached you is drawn as solid',
+     await page.locator('.seg[data-id="niit"]').last().evaluate(e => e.className),
+     'seg on');
+
+  eq('the axis is fixed at one million',
+     await page.evaluate(() => window.__ts.S.axis), 1000000);
+  eq('there is no axis control left', await page.locator('#axis').count(), 0);
+
+  // Every caption must be readable, which means it must fit.
+  eq('no block caption is clipped',
+     await page.locator('.seg .btxt').evaluateAll(
+       els => els.filter(e => e.scrollWidth > e.clientWidth + 1).length), 0);
+
+  // The chip that is on must be legible, which is what broke in light mode.
+  const chipInk = await page.evaluate(() => {
+    const b = document.querySelector('#filters button[aria-pressed="true"]');
+    const cs = getComputedStyle(b);
+    const px = c => c.match(/\d+/g).slice(0, 3).map(Number);
+    const lum = c => { const [r, g, bl] = px(c).map(v => v / 255);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * bl; };
+    return Math.abs(lum(cs.color) - lum(cs.backgroundColor));
+  });
+  ok('a chip that is on has readable text', chipInk > 0.4, chipInk.toFixed(2), '> 0.40');
 
   eq('no console errors', consoleErrors.join(' | '), '');
 
